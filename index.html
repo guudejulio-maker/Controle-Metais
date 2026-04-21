@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Metais — Galvanoplastia</title>
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f7f8fa;
+    --border: #e2e6ea;
+    --border2: #cdd3da;
+    --text: #1a1d23;
+    --text2: #4a5568;
+    --text3: #8a9ab0;
+    --gold: #c9952a;
+    --gold-light: #fdf3dc;
+    --gold-dark: #a07820;
+    --silver: #6b7a8d;
+    --silver-light: #eef0f3;
+    --silver-dark: #4a5568;
+    --green: #1e7e4e;
+    --green-light: #d4f0e4;
+    --red: #c0392b;
+    --red-light: #fde8e6;
+    --blue: #1a56a0;
+    --blue-light: #dceaf8;
+    --orange: #d45d00;
+    --orange-light: #fdeede;
+    --purple: #6b4fa0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar { background: #1a1d23; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; }
+  .dot-gold { color: var(--gold); font-size: 20px; }
+  .dot-silver { color: #bdc3cc; font-size: 20px; }
+  .topbar-right { display:flex; align-items:center; gap:16px; }
+  .topbar-month { font-size: 12px; color: #9aa5b4; text-align: right; }
+  .topbar-month strong { color: var(--gold); display: block; font-size: 13px; }
+  .sync-status { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+  .sync-ok { background: rgba(30,126,78,0.2); color: #4ade80; }
+  .sync-err { background: rgba(192,57,43,0.2); color: #f87171; }
+  .sync-loading { background: rgba(201,149,42,0.2); color: var(--gold); }
+
+  /* NAV */
+  .nav-tabs { background: #22262f; display: flex; gap: 2px; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab { padding: 10px 16px; color: #8a9ab0; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+  .nav-tab:hover { color: #d4d8e0; }
+  .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* MAIN */
+  .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; }
+  .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .stat-card.gold::before { background: var(--gold); }
+  .stat-card.silver::before { background: var(--silver); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.orange::before { background: var(--orange); }
+  .stat-card.purple::before { background: var(--purple); }
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .stat-value.gold-val { color: var(--gold-dark); }
+  .stat-value.silver-val { color: var(--silver-dark); }
+  .stat-value.green-val { color: var(--green); }
+  .stat-value.red-val { color: var(--red); }
+  .stat-sub { font-size: 11px; color: var(--text3); }
+
+  /* ALERTS */
+  .alert { padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; border-left: 4px solid; }
+  .alert-danger { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .alert-warning { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+  .alert-success { background: var(--green-light); border-color: var(--green); color: var(--green); }
+  .alerts-container { margin-bottom: 20px; }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); }
+  input, select, textarea { border: 1.5px solid var(--border2); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 14px; font-family: var(--font); color: var(--text); background: var(--surface); transition: border-color 0.15s; outline: none; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,149,42,0.15); }
+  textarea { resize: vertical; min-height: 70px; }
+
+  /* BUTTONS */
+  .btn { padding: 9px 18px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--font); transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .btn-primary { background: var(--gold); color: #fff; }
+  .btn-primary:hover { background: var(--gold-dark); }
+  .btn-secondary { background: var(--surface); color: var(--text2); border: 1.5px solid var(--border2); }
+  .btn-secondary:hover { background: var(--bg); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #a93226; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #165c38; }
+  .btn-info { background: var(--blue); color: #fff; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-icon { padding: 6px; width: 30px; height: 30px; justify-content: center; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+
+  /* TABLES */
+  .table-wrapper { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: #f0f2f5; }
+  thead th { padding: 10px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); border-bottom: 2px solid var(--border2); white-space: nowrap; text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: #fafbfc; }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 9px 12px; color: var(--text); vertical-align: middle; }
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .badge-gold { background: var(--gold-light); color: var(--gold-dark); }
+  .badge-silver { background: var(--silver-light); color: var(--silver-dark); }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+
+  /* FILTERS */
+  .filters-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; padding: 14px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  .filters-bar input, .filters-bar select { width: auto; flex: 1; min-width: 120px; }
+  .filter-label { font-size: 11px; font-weight: 700; color: var(--text3); white-space: nowrap; text-transform: uppercase; }
+
+  /* LAYOUT */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width:700px) { .two-col { grid-template-columns: 1fr; } }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .section-title { font-size: 18px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .section-title small { font-size: 12px; font-weight: 500; color: var(--text3); display: block; margin-top: 2px; }
+
+  /* STOCK BAR */
+  .stock-bar-wrap { margin: 8px 0; }
+  .stock-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .stock-bar-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .stock-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+
+  /* RANK LIST */
+  .rank-list { list-style: none; }
+  .rank-list li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .rank-list li:last-child { border-bottom: none; }
+  .rank-num { width: 24px; height: 24px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text2); flex-shrink: 0; }
+  .rank-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; background: var(--gold); border-radius: 3px; }
+  .rank-val { font-weight: 700; font-size: 12px; color: var(--text2); white-space: nowrap; }
+
+  /* MISC */
+  .text-right { text-align: right; }
+  .text-gold { color: var(--gold-dark); font-weight: 700; }
+  .text-silver { color: var(--silver-dark); font-weight: 700; }
+  .text-red { color: var(--red); font-weight: 700; }
+  .text-green { color: var(--green); font-weight: 700; }
+  .mt-16 { margin-top: 16px; }
+  .no-data { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
+  .hidden { display: none !important; }
+  .chart-container { position: relative; height: 220px; margin: 10px 0; }
+  .month-closed-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--red-light); color: var(--red); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .coef-table input { width: 90px; text-align: center; padding: 4px 6px; font-size: 12px; }
+  .coef-table td, .coef-table th { padding: 6px 10px; font-size: 12px; }
+
+  @media (max-width: 768px) { .main { padding: 12px; } .grid-cards { grid-template-columns: repeat(2, 1fr); } .form-grid { grid-template-columns: 1fr; } .topbar { padding: 0 12px; } }
+
+  /* Loading overlay */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(26,29,35,0.7); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  .loading-spinner { width: 44px; height: 44px; border: 4px solid rgba(201,149,42,0.3); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .loading-text { color: #fff; font-size: 14px; font-weight: 600; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Conectando ao banco de dados...</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="dot-gold">◆</span>
+    CONTROLE DE METAIS
+    <span class="dot-silver">◆</span>
+    <span style="font-weight:400;color:#6b7a8d;font-size:12px;">Galvanoplastia</span>
+  </div>
+  <div class="topbar-right">
+    <span class="sync-status sync-loading" id="sync-status">⏳ Conectando...</span>
+    <div class="topbar-month">
+      <strong id="topbar-month-label">—</strong>
+      <span id="topbar-date">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="showPage('dashboard')">📊 Dashboard</div>
+  <div class="nav-tab" onclick="showPage('lancamentos')">⚡ Lançamentos</div>
+  <div class="nav-tab" onclick="showPage('compras')">🛒 Compras</div>
+  <div class="nav-tab" onclick="showPage('estoque')">🏭 Estoque</div>
+  <div class="nav-tab" onclick="showPage('relatorios')">📈 Relatórios</div>
+  <div class="nav-tab" onclick="showPage('fechamento')">📅 Fechamento</div>
+  <div class="nav-tab" onclick="showPage('configuracoes')">⚙️ Config.</div>
+</div>
+
+<div class="main">
+  <div class="alerts-container" id="global-alerts"></div>
+
+  <!-- 1. DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="section-header">
+      <div class="section-title">📊 Dashboard Geral <small>Visão completa do mês</small></div>
+      <button class="btn btn-secondary btn-sm" onclick="renderDashboard()">↻ Atualizar</button>
+    </div>
+    <div class="grid-cards" id="dash-cards"></div>
+    <div class="two-col">
+      <div class="card"><div class="card-title">🥇 Ouro — Movimentação</div><div id="dash-gold-detail"></div></div>
+      <div class="card"><div class="card-title">🥈 Prata — Movimentação</div><div id="dash-silver-detail"></div></div>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-title">🎨 Consumo por Cor</div><div id="dash-by-color"></div></div>
+      <div class="card"><div class="card-title">💎 Consumo por Tipo de Peça</div><div id="dash-by-piece"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 Consumo Diário no Mês</div>
+      <div class="chart-container"><canvas id="chart-daily" width="1200" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 2. LANÇAMENTOS -->
+  <div class="page" id="page-lancamentos">
+    <div class="section-header">
+      <div class="section-title">⚡ Lançamentos Diários</div>
+      <button class="btn btn-primary" onclick="toggleForm('form-lancamento')">+ Novo Lançamento</button>
+    </div>
+    <div class="card hidden" id="form-lancamento">
+      <div class="card-title">🔧 Registrar Banho / Lote</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Data e Hora *</label><input type="datetime-local" id="l-datetime"></div>
+        <div class="form-group"><label>Metal *</label><select id="l-metal" onchange="updateCamadas()"><option value="Ouro">Ouro</option><option value="Prata">Prata</option></select></div>
+        <div class="form-group"><label>Tipo de Peça *</label><select id="l-tipo"></select></div>
+        <div class="form-group"><label>Peso Banhado *</label><input type="number" id="l-peso" step="0.001" placeholder="0.000" oninput="calcConsumido()"></div>
+        <div class="form-group"><label>Unidade</label><select id="l-unidade" onchange="calcConsumido()"><option value="g">Gramas (g)</option><option value="kg">Quilos (kg)</option></select></div>
+        <div class="form-group"><label>Cor *</label><select id="l-cor" onchange="calcConsumido()"></select></div>
+        <div class="form-group"><label>Camada *</label><select id="l-camada" onchange="calcConsumido()"></select></div>
+        <div class="form-group"><label>Tanque</label><select id="l-tanque"></select></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Consumo Calculado (g)</label><input type="number" id="l-calc" step="0.0001" readonly style="background:#f7f8fa;color:var(--gold-dark);font-weight:700;"></div>
+        <div class="form-group"><label>Consumo Real (g) — opcional</label><input type="number" id="l-real" step="0.0001" placeholder="Deixe em branco para usar calculado"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label><input type="checkbox" id="l-preouro-check" onchange="toggleExtra('preouro')"> Pré-Ouro</label><input type="number" id="l-preouro" step="0.0001" placeholder="0.0000 g" class="hidden"></div>
+        <div class="form-group"><label><input type="checkbox" id="l-preprata-check" onchange="toggleExtra('preprata')"> Pré-Prata</label><input type="number" id="l-preprata" step="0.0001" placeholder="0.0000 g" class="hidden"></div>
+        <div class="form-group"><label><input type="checkbox" id="l-reforco-check" onchange="toggleExtra('reforco')"> Reforço Folheação</label><input type="number" id="l-reforco" step="0.0001" placeholder="0.0000 g" class="hidden"></div>
+        <div class="form-group"><label><input type="checkbox" id="l-montagem-check" onchange="toggleExtra('montagem')"> Montagem de Cor</label><input type="number" id="l-montagem" step="0.0001" placeholder="0.0000 g" class="hidden"></div>
+        <div class="form-group"><label><input type="checkbox" id="l-extra-check" onchange="toggleExtra('extra')"> Extra</label><input type="number" id="l-extra" step="0.0001" placeholder="0.0000 g" class="hidden"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Responsável</label><input type="text" id="l-responsavel" placeholder="Nome"></div>
+        <div class="form-group"><label>Cliente</label><input type="text" id="l-cliente" placeholder="Nome do cliente"></div>
+        <div class="form-group"><label>Nº OS</label><input type="text" id="l-os" placeholder="OS-0000"></div>
+        <div class="form-group"><label>Observação</label><input type="text" id="l-obs" placeholder="Notas do banho"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="salvarLancamento()">✔ Salvar Lançamento</button>
+        <button class="btn btn-secondary" onclick="cancelarFormLancamento()">Cancelar</button>
+        <span id="l-edit-id" class="hidden"></span>
+      </div>
+    </div>
+    <div class="filters-bar">
+      <span class="filter-label">Filtros:</span>
+      <input type="date" id="f-l-data-ini">
+      <input type="date" id="f-l-data-fim">
+      <select id="f-l-metal"><option value="">Todos metais</option><option value="Ouro">Ouro</option><option value="Prata">Prata</option></select>
+      <select id="f-l-cor"></select>
+      <select id="f-l-tipo"></select>
+      <input type="text" id="f-l-busca" placeholder="Busca rápida...">
+      <button class="btn btn-secondary btn-sm" onclick="renderLancamentos()">Filtrar</button>
+      <button class="btn btn-secondary btn-sm" onclick="limparFiltrosL()">✕ Limpar</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Data/Hora</th><th>Metal</th><th>Tipo</th><th>Peso (g)</th><th>Cor</th><th>Camada</th><th>Tanque</th>
+          <th>Calc.</th><th>Real</th><th>Pré-O</th><th>Pré-P</th><th>Reforço</th><th>Mont.</th><th>Extra</th>
+          <th>Cliente</th><th>OS</th><th>Obs</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="tbody-lancamentos"></tbody>
+      </table>
+    </div>
+    <div id="lancamentos-no-data" class="no-data hidden">Nenhum lançamento encontrado.</div>
+    <div id="lancamentos-total" style="padding:10px 0;font-size:12px;color:var(--text3);"></div>
+  </div>
+
+  <!-- 3. COMPRAS -->
+  <div class="page" id="page-compras">
+    <div class="section-header">
+      <div class="section-title">🛒 Compras de Metal</div>
+      <button class="btn btn-primary" onclick="toggleForm('form-compra')">+ Nova Compra</button>
+    </div>
+    <div class="card hidden" id="form-compra">
+      <div class="card-title">🛒 Registrar Compra</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Data *</label><input type="date" id="c-data"></div>
+        <div class="form-group"><label>Metal *</label><select id="c-metal"><option value="Ouro">Ouro</option><option value="Prata">Prata</option></select></div>
+        <div class="form-group"><label>Fornecedor</label><input type="text" id="c-fornecedor" placeholder="Nome do fornecedor"></div>
+        <div class="form-group"><label>Quantidade (g) *</label><input type="number" id="c-qtd" step="0.001" placeholder="0.000"></div>
+        <div class="form-group"><label>Valor Pago (R$)</label><input type="number" id="c-valor" step="0.01" placeholder="0.00"></div>
+        <div class="form-group"><label>Observação</label><input type="text" id="c-obs" placeholder="Notas da compra"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="salvarCompra()">✔ Salvar Compra</button>
+        <button class="btn btn-secondary" onclick="toggleForm('form-compra')">Cancelar</button>
+        <span id="c-edit-id" class="hidden"></span>
+      </div>
+    </div>
+    <div class="table-wrapper mt-16">
+      <table>
+        <thead><tr><th>Data</th><th>Metal</th><th>Fornecedor</th><th>Qtd (g)</th><th>Valor (R$)</th><th>R$/g</th><th>Obs</th><th>Ações</th></tr></thead>
+        <tbody id="tbody-compras"></tbody>
+      </table>
+    </div>
+    <div id="compras-no-data" class="no-data hidden">Nenhuma compra registrada.</div>
+    <div id="compras-total" style="padding:10px 0;font-size:12px;color:var(--text3);"></div>
+  </div>
+
+  <!-- 4. ESTOQUE -->
+  <div class="page" id="page-estoque">
+    <div class="section-header">
+      <div class="section-title">🏭 Estoque e Ajustes</div>
+      <button class="btn btn-primary" onclick="toggleForm('form-ajuste')">+ Ajuste Manual</button>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-title">🥇 Ouro</div><div id="estoque-ouro-detail"></div></div>
+      <div class="card"><div class="card-title">🥈 Prata</div><div id="estoque-prata-detail"></div></div>
+    </div>
+    <div class="card hidden" id="form-ajuste">
+      <div class="card-title">🔧 Registrar Ajuste Manual</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Data *</label><input type="date" id="a-data"></div>
+        <div class="form-group"><label>Metal *</label><select id="a-metal"><option value="Ouro">Ouro</option><option value="Prata">Prata</option></select></div>
+        <div class="form-group"><label>Tipo de Ajuste *</label>
+          <select id="a-tipo">
+            <option value="ajuste_positivo">Ajuste Positivo (+)</option>
+            <option value="ajuste_negativo">Ajuste Negativo (-)</option>
+            <option value="perda">Perda</option>
+            <option value="sobra_reaproveitada">Sobra Reaproveitada (+)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Quantidade (g) *</label><input type="number" id="a-qtd" step="0.001" placeholder="0.000"></div>
+        <div class="form-group"><label>Observação</label><input type="text" id="a-obs" placeholder="Motivo do ajuste"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="salvarAjuste()">✔ Salvar Ajuste</button>
+        <button class="btn btn-secondary" onclick="toggleForm('form-ajuste')">Cancelar</button>
+      </div>
+    </div>
+    <div class="card mt-16">
+      <div class="card-title">📋 Histórico de Movimentações</div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Data</th><th>Metal</th><th>Tipo</th><th>Entrada (g)</th><th>Saída (g)</th><th>Observação</th></tr></thead>
+          <tbody id="tbody-movimentacoes"></tbody>
+        </table>
+      </div>
+      <div id="mov-no-data" class="no-data hidden">Nenhuma movimentação.</div>
+    </div>
+  </div>
+
+  <!-- 5. RELATÓRIOS -->
+  <div class="page" id="page-relatorios">
+    <div class="section-header"><div class="section-title">📈 Relatórios</div></div>
+    <div class="filters-bar">
+      <span class="filter-label">Período:</span>
+      <select id="r-periodo" onchange="updatePeriodFilter()">
+        <option value="dia">Hoje</option>
+        <option value="semana">Esta Semana</option>
+        <option value="mes" selected>Este Mês</option>
+        <option value="custom">Personalizado</option>
+      </select>
+      <input type="date" id="r-data-ini" class="hidden">
+      <input type="date" id="r-data-fim" class="hidden">
+      <select id="r-metal"><option value="">Todos metais</option><option value="Ouro">Ouro</option><option value="Prata">Prata</option></select>
+      <button class="btn btn-primary btn-sm" onclick="gerarRelatorio()">📊 Gerar</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportarCSV()">⬇ CSV</button>
+    </div>
+    <div id="relatorio-content"></div>
+  </div>
+
+  <!-- 6. FECHAMENTO -->
+  <div class="page" id="page-fechamento">
+    <div class="section-header"><div class="section-title">📅 Fechamento Mensal</div></div>
+    <div class="card"><div class="card-title">📅 Meses Registrados</div><div id="meses-lista"></div></div>
+    <div class="card" id="card-fechar-mes">
+      <div class="card-title">🔒 Fechar Mês Atual</div>
+      <p style="color:var(--text2);font-size:13px;margin-bottom:16px;">Ao fechar o mês, todos os lançamentos são travados. O histórico permanece consultável. Um novo mês será iniciado.</p>
+      <div class="form-grid">
+        <div class="form-group"><label>Ouro Inicial do Novo Mês (g)</label><input type="number" id="fm-ouro" step="0.001" placeholder="0.000"></div>
+        <div class="form-group"><label>Prata Inicial do Novo Mês (g)</label><input type="number" id="fm-prata" step="0.001" placeholder="0.000"></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-danger" onclick="fecharMes()">🔒 Fechar Mês e Iniciar Novo</button></div>
+    </div>
+  </div>
+
+  <!-- 7. CONFIGURAÇÕES -->
+  <div class="page" id="page-configuracoes">
+    <div class="section-header">
+      <div class="section-title">⚙️ Configurações</div>
+      <button class="btn btn-secondary btn-sm" onclick="exportarCSVCompleto()">⬇ Exportar Dados CSV</button>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">🎨 Cores</div>
+        <div id="cfg-cores-list"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;"><input type="text" id="cfg-cor-nova" placeholder="Nova cor..."><button class="btn btn-primary btn-sm" onclick="addConfig('cores')">+ Add</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">💎 Tipos de Peça</div>
+        <div id="cfg-tipos-list"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;"><input type="text" id="cfg-tipo-novo" placeholder="Novo tipo..."><button class="btn btn-primary btn-sm" onclick="addConfig('tipos')">+ Add</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏭 Tanques</div>
+        <div id="cfg-tanques-list"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;"><input type="text" id="cfg-tanque-novo" placeholder="Novo tanque..."><button class="btn btn-primary btn-sm" onclick="addConfig('tanques')">+ Add</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📅 Mês Atual — Iniciais</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Ouro Inicial (g)</label><input type="number" id="cfg-ouro-inicial" step="0.001" placeholder="0.000"></div>
+          <div class="form-group"><label>Prata Inicial (g)</label><input type="number" id="cfg-prata-inicial" step="0.001" placeholder="0.000"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="salvarIniciais()">💾 Salvar</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🥇 Camadas de Ouro</div>
+        <div id="cfg-camadas-ouro-list"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input type="text" id="cfg-camada-ouro-nova" placeholder="Nome...">
+          <input type="number" id="cfg-camada-ouro-valor" placeholder="Valor" step="0.000001" style="width:80px;">
+          <button class="btn btn-primary btn-sm" onclick="addCamada('Ouro')">+ Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🥈 Camadas de Prata</div>
+        <div id="cfg-camadas-prata-list"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input type="text" id="cfg-camada-prata-nova" placeholder="Nome...">
+          <input type="number" id="cfg-camada-prata-valor" placeholder="Valor" step="0.000001" style="width:80px;">
+          <button class="btn btn-primary btn-sm" onclick="addCamada('Prata')">+ Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="card mt-16">
+      <div class="card-title">🔢 Tabela de Coeficientes</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px;"><strong>Fórmula:</strong> Consumo = Peso Banhado (g) × Coeficiente. Deixe em branco para usar cálculo automático por camada.</p>
+      <div id="coef-table-container"></div>
+      <button class="btn btn-primary btn-sm mt-16" onclick="salvarCoeficientes()">💾 Salvar Coeficientes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   SUPABASE CONFIG
+============================================================ */
+const SUPABASE_URL = 'https://zhxhmgwfbxnxbptixskv.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoeGhtZ3dmYnhueGJwdGl4c2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTQwMTksImV4cCI6MjA5MTc5MDAxOX0.R8DYrcknP7QVMBvVZtc9jr-yWJZo1iACFBRA2YzLwTo';
+
+const SB_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Prefer': 'return=representation'
+};
+
+async function sbGet(table, params = '') {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, { headers: SB_HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbPost(table, body) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST', headers: SB_HEADERS, body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbPatch(table, id, body) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbDelete(table, id) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'DELETE', headers: SB_HEADERS
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+async function sbUpsertConfig(chave, valor) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/metais_config`, {
+    method: 'POST',
+    headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify({ chave, valor, atualizado_em: new Date().toISOString() })
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/* ============================================================
+   CONFIG (estado local com persistência no Supabase)
+============================================================ */
+let CFG = {
+  cores: ['1055 c/v', '1055 s/v', 'SI - Daniel', 'FCO 17'],
+  tipos: ['Pingente', 'Corrente', 'Choker', 'Brinco', 'Outros'],
+  tanques: ['Tanque 1', 'Tanque 2', 'Tanque 3'],
+  camadas_ouro: [
+    { nome: '0,30', valor: 0.00030 }, { nome: '0,35', valor: 0.00035 },
+    { nome: '0,40', valor: 0.00040 }, { nome: '0,45', valor: 0.00045 },
+    { nome: '0,55', valor: 0.00055 }, { nome: '1 milésimo', valor: 0.001 },
+    { nome: '2 milésimos', valor: 0.002 }, { nome: '3 milésimos', valor: 0.003 },
+    { nome: '4 milésimos', valor: 0.004 }, { nome: '5 milésimos', valor: 0.005 },
+    { nome: '10 milésimos', valor: 0.010 }, { nome: '20 milésimos', valor: 0.020 },
+    { nome: '30 milésimos', valor: 0.030 }, { nome: '40 milésimos', valor: 0.040 },
+    { nome: '50 milésimos', valor: 0.050 }, { nome: '70 milésimos', valor: 0.070 }
+  ],
+  camadas_prata: [
+    { nome: '5 milésimos', valor: 0.005 }, { nome: '10 milésimos', valor: 0.010 },
+    { nome: '20 milésimos', valor: 0.020 }, { nome: '30 milésimos', valor: 0.030 },
+    { nome: '40 milésimos', valor: 0.040 }, { nome: '50 milésimos', valor: 0.050 },
+    { nome: '70 milésimos', valor: 0.070 }
+  ],
+  coeficientes: {},
+  ouro_inicial: {},
+  prata_inicial: {}
+};
+
+// Cache local dos dados do Supabase
+let LANCAMENTOS = [];
+let COMPRAS = [];
+let AJUSTES = [];
+let MESES = [];
+
+function getMesAtual() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+async function init() {
+  document.getElementById('topbar-month-label').textContent = formatMonthKey(getMesAtual());
+  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  setSyncStatus('loading', '⏳ Carregando...');
+
+  try {
+    await carregarConfig();
+    await carregarDados();
+    setSyncStatus('ok', '✓ Online');
+    await garantirMesAtual();
+    populateSelects();
+    renderDashboard();
+    checkAlerts();
+  } catch (e) {
+    console.error(e);
+    setSyncStatus('err', '✗ Sem conexão');
+    showToast('Erro ao conectar ao banco de dados: ' + e.message, 'error');
+  }
+
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+async function carregarConfig() {
+  const rows = await sbGet('metais_config');
+  rows.forEach(r => {
+    CFG[r.chave] = r.valor;
+  });
+}
+
+async function salvarConfig(chave) {
+  await sbUpsertConfig(chave, CFG[chave]);
+}
+
+async function carregarDados() {
+  const mes = getMesAtual();
+  // Carrega todos os dados do mês atual e meses anteriores
+  [LANCAMENTOS, COMPRAS, AJUSTES, MESES] = await Promise.all([
+    sbGet('metais_lancamentos', `?order=datetime_lancamento.desc`),
+    sbGet('metais_compras', `?order=data.desc`),
+    sbGet('metais_ajustes', `?order=data.desc`),
+    sbGet('metais_meses', `?order=mes_key.desc`)
+  ]);
+}
+
+async function garantirMesAtual() {
+  const mes = getMesAtual();
+  const existe = MESES.find(m => m.mes_key === mes);
+  if (!existe) {
+    const created = await sbPost('metais_meses', {
+      mes_key: mes,
+      status: 'aberto',
+      ouro_inicial: CFG.ouro_inicial[mes] || 0,
+      prata_inicial: CFG.prata_inicial[mes] || 0
+    });
+    MESES.unshift(created[0]);
+  }
+}
+
+function setSyncStatus(state, text) {
+  const el = document.getElementById('sync-status');
+  el.textContent = text;
+  el.className = 'sync-status ' + { ok: 'sync-ok', err: 'sync-err', loading: 'sync-loading' }[state];
+}
+
+/* ============================================================
+   NAVEGAÇÃO
+============================================================ */
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const order = ['dashboard','lancamentos','compras','estoque','relatorios','fechamento','configuracoes'];
+  document.querySelectorAll('.nav-tab')[order.indexOf(page)]?.classList.add('active');
+
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'lancamentos') { populateSelects(); renderLancamentos(); }
+  if (page === 'compras') renderCompras();
+  if (page === 'estoque') renderEstoque();
+  if (page === 'relatorios') gerarRelatorio();
+  if (page === 'fechamento') renderFechamento();
+  if (page === 'configuracoes') renderConfig();
+}
+
+function toggleForm(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('hidden');
+  if (!el.classList.contains('hidden')) {
+    if (id === 'form-lancamento') {
+      const now = new Date();
+      const pad = v => String(v).padStart(2,'0');
+      document.getElementById('l-datetime').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      document.getElementById('l-edit-id').textContent = '';
+      updateCamadas(); populateSelects();
+    }
+    if (id === 'form-compra') {
+      document.getElementById('c-data').value = new Date().toISOString().split('T')[0];
+      document.getElementById('c-edit-id').textContent = '';
+    }
+    if (id === 'form-ajuste') document.getElementById('a-data').value = new Date().toISOString().split('T')[0];
+  }
+}
+
+/* ============================================================
+   SELECTS DINÂMICOS
+============================================================ */
+function populateSelects() {
+  fillSelect('l-cor', CFG.cores);
+  fillSelect('l-tipo', CFG.tipos);
+  fillSelect('l-tanque', ['—', ...CFG.tanques]);
+  fillSelect('f-l-cor', ['', ...CFG.cores], true);
+  fillSelect('f-l-tipo', ['', ...CFG.tipos], true);
+  updateCamadas();
+}
+
+function fillSelect(id, options, addEmpty = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const prev = el.value;
+  el.innerHTML = '';
+  if (addEmpty) el.appendChild(new Option('Todos', ''));
+  options.forEach(opt => el.appendChild(new Option(opt, opt)));
+  if (prev) el.value = prev;
+}
+
+function updateCamadas() {
+  const metal = document.getElementById('l-metal')?.value;
+  const camadas = metal === 'Prata' ? CFG.camadas_prata : CFG.camadas_ouro;
+  const sel = document.getElementById('l-camada');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '';
+  camadas.forEach(c => sel.appendChild(new Option(c.nome, c.nome)));
+  if (prev) sel.value = prev;
+  calcConsumido();
+}
+
+/* ============================================================
+   CÁLCULO DE CONSUMO
+============================================================ */
+function calcConsumido() {
+  const metal = document.getElementById('l-metal')?.value || 'Ouro';
+  const tipo = document.getElementById('l-tipo')?.value || '';
+  const cor = document.getElementById('l-cor')?.value || '';
+  const camadaNome = document.getElementById('l-camada')?.value || '';
+  const peso = parseFloat(document.getElementById('l-peso')?.value) || 0;
+  const unidade = document.getElementById('l-unidade')?.value || 'g';
+  const pesoG = unidade === 'kg' ? peso * 1000 : peso;
+
+  const camadas = metal === 'Prata' ? CFG.camadas_prata : CFG.camadas_ouro;
+  const camadaObj = camadas.find(c => c.nome === camadaNome);
+  const camadaVal = camadaObj ? camadaObj.valor : 0;
+
+  const coefKey = `${metal}|${tipo}|${cor}`;
+  const coef = CFG.coeficientes[coefKey];
+
+  let consumo = 0;
+  if (coef !== undefined && coef !== null && coef !== '') {
+    consumo = pesoG * parseFloat(coef);
+  } else {
+    const densidade = metal === 'Prata' ? 10.49 : 19.32;
+    consumo = pesoG * camadaVal * densidade * 0.001;
+  }
+
+  const el = document.getElementById('l-calc');
+  if (el) el.value = consumo > 0 ? consumo.toFixed(4) : '';
+}
+
+/* ============================================================
+   LANÇAMENTOS — CRUD
+============================================================ */
+async function salvarLancamento() {
+  const editId = document.getElementById('l-edit-id').textContent.trim();
+  const metal = document.getElementById('l-metal').value;
+  const tipo = document.getElementById('l-tipo').value;
+  const peso = parseFloat(document.getElementById('l-peso').value) || 0;
+  const unidade = document.getElementById('l-unidade').value;
+  const pesoG = unidade === 'kg' ? peso * 1000 : peso;
+  const cor = document.getElementById('l-cor').value;
+  const camada = document.getElementById('l-camada').value;
+
+  if (!metal || !tipo || !pesoG || !cor || !camada) { showToast('Preencha os campos obrigatórios.', 'error'); return; }
+
+  const consumo_calc = parseFloat(document.getElementById('l-calc').value) || 0;
+  const realVal = document.getElementById('l-real').value.trim();
+  const consumo_real = realVal !== '' ? parseFloat(realVal) : null;
+
+  const getExtra = (checkId, inputId) =>
+    document.getElementById(checkId).checked ? (parseFloat(document.getElementById(inputId).value) || 0) : 0;
+
+  const payload = {
+    mes_key: getMesAtual(),
+    datetime_lancamento: document.getElementById('l-datetime').value,
+    metal, tipo_peca: tipo, peso_g: pesoG, cor, camada,
+    tanque: document.getElementById('l-tanque').value || null,
+    consumo_calc,
+    consumo_real,
+    pre_ouro: getExtra('l-preouro-check', 'l-preouro'),
+    pre_prata: getExtra('l-preprata-check', 'l-preprata'),
+    reforco: getExtra('l-reforco-check', 'l-reforco'),
+    montagem: getExtra('l-montagem-check', 'l-montagem'),
+    extra: getExtra('l-extra-check', 'l-extra'),
+    responsavel: document.getElementById('l-responsavel').value || null,
+    cliente: document.getElementById('l-cliente').value || null,
+    os: document.getElementById('l-os').value || null,
+    obs: document.getElementById('l-obs').value || null,
+    fechado: false
+  };
+
+  try {
+    setSyncStatus('loading', '⏳ Salvando...');
+    if (editId) {
+      const updated = await sbPatch('metais_lancamentos', editId, payload);
+      const idx = LANCAMENTOS.findIndex(l => l.id === editId);
+      if (idx >= 0) LANCAMENTOS[idx] = { ...LANCAMENTOS[idx], ...payload, id: editId };
+    } else {
+      const created = await sbPost('metais_lancamentos', payload);
+      LANCAMENTOS.unshift(created[0]);
+    }
+    setSyncStatus('ok', '✓ Online');
+    cancelarFormLancamento();
+    renderLancamentos();
+    renderDashboard();
+    checkAlerts();
+    showToast('Lançamento salvo!', 'success');
+  } catch (e) {
+    setSyncStatus('err', '✗ Erro');
+    showToast('Erro ao salvar: ' + e.message, 'error');
+  }
+}
+
+function cancelarFormLancamento() {
+  document.getElementById('form-lancamento').classList.add('hidden');
+  ['l-peso','l-real','l-calc','l-preouro','l-preprata','l-reforco','l-montagem','l-extra',
+   'l-responsavel','l-cliente','l-os','l-obs'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['l-preouro-check','l-preprata-check','l-reforco-check','l-montagem-check','l-extra-check']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.checked = false; });
+  ['l-preouro','l-preprata','l-reforco','l-montagem','l-extra']
+    .forEach(id => document.getElementById(id)?.classList.add('hidden'));
+  document.getElementById('l-edit-id').textContent = '';
+}
+
+function editarLancamento(id) {
+  const l = LANCAMENTOS.find(x => x.id === id);
+  if (!l) return;
+  document.getElementById('form-lancamento').classList.remove('hidden');
+  document.getElementById('l-datetime').value = l.datetime_lancamento?.substring(0,16);
+  document.getElementById('l-metal').value = l.metal;
+  updateCamadas();
+  document.getElementById('l-tipo').value = l.tipo_peca;
+  document.getElementById('l-peso').value = l.peso_g;
+  document.getElementById('l-unidade').value = 'g';
+  document.getElementById('l-cor').value = l.cor;
+  document.getElementById('l-camada').value = l.camada;
+  document.getElementById('l-tanque').value = l.tanque || '—';
+  document.getElementById('l-calc').value = l.consumo_calc || '';
+  document.getElementById('l-real').value = l.consumo_real !== null ? l.consumo_real : '';
+  document.getElementById('l-responsavel').value = l.responsavel || '';
+  document.getElementById('l-cliente').value = l.cliente || '';
+  document.getElementById('l-os').value = l.os || '';
+  document.getElementById('l-obs').value = l.obs || '';
+  document.getElementById('l-edit-id').textContent = id;
+
+  const setExtra = (checkId, inputId, val) => {
+    if (val > 0) {
+      document.getElementById(checkId).checked = true;
+      document.getElementById(inputId).value = val;
+      document.getElementById(inputId).classList.remove('hidden');
+    }
+  };
+  setExtra('l-preouro-check', 'l-preouro', l.pre_ouro);
+  setExtra('l-preprata-check', 'l-preprata', l.pre_prata);
+  setExtra('l-reforco-check', 'l-reforco', l.reforco);
+  setExtra('l-montagem-check', 'l-montagem', l.montagem);
+  setExtra('l-extra-check', 'l-extra', l.extra);
+  document.getElementById('form-lancamento').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function excluirLancamento(id) {
+  if (!confirm('Excluir este lançamento?')) return;
+  try {
+    await sbDelete('metais_lancamentos', id);
+    LANCAMENTOS = LANCAMENTOS.filter(l => l.id !== id);
+    renderLancamentos(); renderDashboard(); checkAlerts();
+    showToast('Lançamento excluído.', 'success');
+  } catch(e) { showToast('Erro ao excluir: ' + e.message, 'error'); }
+}
+
+function toggleExtra(tipo) {
+  const el = document.getElementById('l-' + tipo);
+  const check = document.getElementById('l-' + tipo + '-check');
+  if (check.checked) el.classList.remove('hidden');
+  else el.classList.add('hidden');
+}
+
+/* ============================================================
+   RENDER LANÇAMENTOS
+============================================================ */
+function getLancamentosAtivos() {
+  return LANCAMENTOS.filter(l => l.mes_key === getMesAtual() && !l.fechado);
+}
+
+function renderLancamentos() {
+  const tbody = document.getElementById('tbody-lancamentos');
+  if (!tbody) return;
+
+  let data = [...LANCAMENTOS];
+  const fIni = document.getElementById('f-l-data-ini')?.value;
+  const fFim = document.getElementById('f-l-data-fim')?.value;
+  const fMetal = document.getElementById('f-l-metal')?.value;
+  const fCor = document.getElementById('f-l-cor')?.value;
+  const fTipo = document.getElementById('f-l-tipo')?.value;
+  const fBusca = document.getElementById('f-l-busca')?.value?.toLowerCase();
+
+  if (fIni) data = data.filter(l => l.datetime_lancamento >= fIni);
+  if (fFim) data = data.filter(l => l.datetime_lancamento <= fFim + 'T23:59:59');
+  if (fMetal) data = data.filter(l => l.metal === fMetal);
+  if (fCor) data = data.filter(l => l.cor === fCor);
+  if (fTipo) data = data.filter(l => l.tipo_peca === fTipo);
+  if (fBusca) data = data.filter(l =>
+    [l.cliente, l.os, l.responsavel, l.obs, l.cor, l.tipo_peca, l.metal]
+      .some(v => (v || '').toLowerCase().includes(fBusca))
+  );
+
+  if (!fIni && !fFim && !fMetal && !fCor && !fTipo && !fBusca) {
+    data = data.filter(l => l.mes_key === getMesAtual());
+  }
+
+  if (data.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('lancamentos-no-data').classList.remove('hidden');
+    document.getElementById('lancamentos-total').textContent = '';
+    return;
+  }
+  document.getElementById('lancamentos-no-data').classList.add('hidden');
+
+  let totalPeso = 0, totOuro = 0, totPrata = 0;
+
+  tbody.innerHTML = data.map(l => {
+    const consumoFinal = l.consumo_real !== null ? l.consumo_real : l.consumo_calc;
+    totalPeso += parseFloat(l.peso_g) || 0;
+    if (l.metal === 'Ouro') totOuro += (parseFloat(consumoFinal) || 0) + (parseFloat(l.pre_ouro) || 0);
+    if (l.metal === 'Prata') totPrata += (parseFloat(consumoFinal) || 0) + (parseFloat(l.pre_prata) || 0);
+
+    const badge = l.metal === 'Ouro' ? 'badge-gold' : 'badge-silver';
+    const calc = parseFloat(l.consumo_calc) || 0;
+    const real = l.consumo_real !== null ? parseFloat(l.consumo_real) : null;
+    const diff = real !== null ? (real - calc) : null;
+    const diffHtml = diff !== null ?
+      `<span style="font-size:10px;color:${Math.abs(diff) > 0.05 ? 'var(--red)' : 'var(--green)'}"> (${diff >= 0 ? '+' : ''}${diff.toFixed(4)})</span>` : '';
+
+    const dt = l.datetime_lancamento?.replace('T',' ').substring(0,16) || '—';
+    const fechadoBadge = l.fechado ? '<span class="badge badge-red" style="font-size:9px;">FECHADO</span>' : '';
+
+    return `<tr style="${l.fechado ? 'opacity:0.6;' : ''}">
+      <td>${dt} ${fechadoBadge}</td>
+      <td><span class="badge ${badge}">${l.metal}</span></td>
+      <td>${l.tipo_peca}</td>
+      <td class="text-right">${parseFloat(l.peso_g).toFixed(3)}</td>
+      <td>${l.cor}</td>
+      <td style="white-space:nowrap;">${l.camada}</td>
+      <td>${l.tanque || '—'}</td>
+      <td class="text-right">${calc.toFixed(4)}</td>
+      <td class="text-right">${real !== null ? real.toFixed(4) : '—'}${diffHtml}</td>
+      <td class="text-right">${parseFloat(l.pre_ouro) > 0 ? parseFloat(l.pre_ouro).toFixed(4) : '—'}</td>
+      <td class="text-right">${parseFloat(l.pre_prata) > 0 ? parseFloat(l.pre_prata).toFixed(4) : '—'}</td>
+      <td class="text-right">${parseFloat(l.reforco) > 0 ? parseFloat(l.reforco).toFixed(4) : '—'}</td>
+      <td class="text-right">${parseFloat(l.montagem) > 0 ? parseFloat(l.montagem).toFixed(4) : '—'}</td>
+      <td class="text-right">${parseFloat(l.extra) > 0 ? parseFloat(l.extra).toFixed(4) : '—'}</td>
+      <td>${l.cliente || '—'}</td>
+      <td>${l.os || '—'}</td>
+      <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;" title="${l.obs||''}">${l.obs || '—'}</td>
+      <td style="white-space:nowrap;">
+        ${!l.fechado ? `<button class="btn btn-secondary btn-sm btn-icon" onclick="editarLancamento('${l.id}')" title="Editar">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="excluirLancamento('${l.id}')" title="Excluir">🗑️</button>` : '—'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('lancamentos-total').innerHTML =
+    `<strong>${data.length}</strong> lançamentos | Total banhado: <strong>${totalPeso.toFixed(3)} g</strong> | Ouro: <strong class="text-gold">${totOuro.toFixed(4)} g</strong> | Prata: <strong class="text-silver">${totPrata.toFixed(4)} g</strong>`;
+}
+
+function limparFiltrosL() {
+  ['f-l-data-ini','f-l-data-fim','f-l-busca'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['f-l-metal','f-l-cor','f-l-tipo'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  renderLancamentos();
+}
+
+/* ============================================================
+   COMPRAS — CRUD
+============================================================ */
+async function salvarCompra() {
+  const editId = document.getElementById('c-edit-id').textContent.trim();
+  const data = document.getElementById('c-data').value;
+  const metal = document.getElementById('c-metal').value;
+  const qtd = parseFloat(document.getElementById('c-qtd').value) || 0;
+  if (!data || !metal || !qtd) { showToast('Preencha data, metal e quantidade.', 'error'); return; }
+
+  const payload = {
+    mes_key: getMesAtual(), data, metal,
+    fornecedor: document.getElementById('c-fornecedor').value || null,
+    qtd_g: qtd,
+    valor_rs: parseFloat(document.getElementById('c-valor').value) || 0,
+    obs: document.getElementById('c-obs').value || null
+  };
+
+  try {
+    setSyncStatus('loading', '⏳ Salvando...');
+    if (editId) {
+      await sbPatch('metais_compras', editId, payload);
+      const idx = COMPRAS.findIndex(c => c.id === editId);
+      if (idx >= 0) COMPRAS[idx] = { ...COMPRAS[idx], ...payload };
+    } else {
+      const created = await sbPost('metais_compras', payload);
+      COMPRAS.unshift(created[0]);
+    }
+    setSyncStatus('ok', '✓ Online');
+    toggleForm('form-compra');
+    renderCompras(); renderDashboard(); checkAlerts();
+    showToast('Compra registrada!', 'success');
+  } catch(e) { setSyncStatus('err', '✗ Erro'); showToast('Erro: ' + e.message, 'error'); }
+}
+
+function editarCompra(id) {
+  const c = COMPRAS.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('form-compra').classList.remove('hidden');
+  document.getElementById('c-data').value = c.data;
+  document.getElementById('c-metal').value = c.metal;
+  document.getElementById('c-fornecedor').value = c.fornecedor || '';
+  document.getElementById('c-qtd').value = c.qtd_g;
+  document.getElementById('c-valor').value = c.valor_rs || '';
+  document.getElementById('c-obs').value = c.obs || '';
+  document.getElementById('c-edit-id').textContent = id;
+}
+
+async function excluirCompra(id) {
+  if (!confirm('Excluir esta compra?')) return;
+  try {
+    await sbDelete('metais_compras', id);
+    COMPRAS = COMPRAS.filter(c => c.id !== id);
+    renderCompras(); renderDashboard(); checkAlerts();
+    showToast('Compra excluída.', 'success');
+  } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+}
+
+function renderCompras() {
+  const tbody = document.getElementById('tbody-compras');
+  if (!tbody) return;
+  const mes = getMesAtual();
+  const data = COMPRAS.filter(c => c.mes_key === mes);
+
+  if (data.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('compras-no-data').classList.remove('hidden');
+    document.getElementById('compras-total').textContent = '';
+    return;
+  }
+  document.getElementById('compras-no-data').classList.add('hidden');
+
+  let totO = 0, totP = 0;
+  tbody.innerHTML = data.map(c => {
+    const qtd = parseFloat(c.qtd_g) || 0;
+    const val = parseFloat(c.valor_rs) || 0;
+    const rg = val > 0 && qtd > 0 ? (val/qtd).toFixed(2) : '—';
+    if (c.metal === 'Ouro') totO += qtd;
+    else totP += qtd;
+    const badge = c.metal === 'Ouro' ? 'badge-gold' : 'badge-silver';
+    return `<tr>
+      <td>${formatDate(c.data)}</td>
+      <td><span class="badge ${badge}">${c.metal}</span></td>
+      <td>${c.fornecedor || '—'}</td>
+      <td class="text-right">${qtd.toFixed(3)} g</td>
+      <td class="text-right">${val > 0 ? 'R$ ' + val.toFixed(2) : '—'}</td>
+      <td class="text-right">${rg !== '—' ? 'R$ ' + rg + '/g' : '—'}</td>
+      <td>${c.obs || '—'}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="editarCompra('${c.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="excluirCompra('${c.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('compras-total').innerHTML =
+    `Total comprado: <strong class="text-gold">${totO.toFixed(3)} g ouro</strong> | <strong class="text-silver">${totP.toFixed(3)} g prata</strong>`;
+}
+
+/* ============================================================
+   AJUSTES — CRUD
+============================================================ */
+async function salvarAjuste() {
+  const data = document.getElementById('a-data').value;
+  const metal = document.getElementById('a-metal').value;
+  const tipo = document.getElementById('a-tipo').value;
+  const qtd = parseFloat(document.getElementById('a-qtd').value) || 0;
+  if (!data || !metal || !qtd) { showToast('Preencha todos os campos.', 'error'); return; }
+
+  const payload = {
+    mes_key: getMesAtual(), data, metal, tipo, qtd_g: qtd,
+    obs: document.getElementById('a-obs').value || null
+  };
+
+  try {
+    setSyncStatus('loading', '⏳ Salvando...');
+    const created = await sbPost('metais_ajustes', payload);
+    AJUSTES.unshift(created[0]);
+    setSyncStatus('ok', '✓ Online');
+    toggleForm('form-ajuste');
+    renderEstoque(); renderDashboard(); checkAlerts();
+    showToast('Ajuste registrado!', 'success');
+  } catch(e) { setSyncStatus('err', '✗ Erro'); showToast('Erro: ' + e.message, 'error'); }
+}
+
+/* ============================================================
+   CÁLCULO DE ESTOQUE
+============================================================ */
+function calcEstoque(metal, mesKey) {
+  mesKey = mesKey || getMesAtual();
+  const lan = LANCAMENTOS.filter(l => l.mes_key === mesKey && l.metal === metal);
+  const compras = COMPRAS.filter(c => c.mes_key === mesKey && c.metal === metal);
+  const ajustes = AJUSTES.filter(a => a.mes_key === mesKey && a.metal === metal);
+
+  // Busca o registro do mês no Supabase
+  const mesDB = MESES.find(m => m.mes_key === mesKey);
+  const inicial = metal === 'Ouro' ?
+    parseFloat(CFG.ouro_inicial?.[mesKey] || mesDB?.ouro_inicial || 0) :
+    parseFloat(CFG.prata_inicial?.[mesKey] || mesDB?.prata_inicial || 0);
+
+  const totalCompras = compras.reduce((s, c) => s + parseFloat(c.qtd_g || 0), 0);
+  const ajPos = ajustes.filter(a => ['ajuste_positivo','sobra_reaproveitada'].includes(a.tipo)).reduce((s, a) => s + parseFloat(a.qtd_g || 0), 0);
+  const ajNeg = ajustes.filter(a => ['ajuste_negativo','perda'].includes(a.tipo)).reduce((s, a) => s + parseFloat(a.qtd_g || 0), 0);
+
+  const consumoPrincipal = lan.reduce((s, l) => {
+    const consumoFinal = l.consumo_real !== null ? parseFloat(l.consumo_real || 0) : parseFloat(l.consumo_calc || 0);
+    return s + consumoFinal;
+  }, 0);
+
+  // Extras de todos lançamentos do mês (independente do metal do banho)
+  const allLan = LANCAMENTOS.filter(l => l.mes_key === mesKey);
+  let preOuro = 0, prePrata = 0, reforco = 0, montagem = 0, extra = 0;
+  allLan.forEach(l => {
+    preOuro += parseFloat(l.pre_ouro || 0);
+    prePrata += parseFloat(l.pre_prata || 0);
+    reforco += parseFloat(l.reforco || 0);
+    montagem += parseFloat(l.montagem || 0);
+    extra += parseFloat(l.extra || 0);
+  });
+
+  const consumoExtras = metal === 'Ouro'
+    ? preOuro + reforco + montagem + extra
+    : prePrata + reforco + montagem + extra;
+
+  const estoqueAtual = inicial + totalCompras + ajPos - ajNeg - consumoPrincipal - consumoExtras;
+
+  return { inicial, totalCompras, ajPos, ajNeg, consumoPrincipal, preOuro, prePrata, reforco, montagem, extra, consumoExtras, estoqueAtual };
+}
+
+/* ============================================================
+   RENDER ESTOQUE
+============================================================ */
+function renderEstoque() {
+  ['Ouro','Prata'].forEach(metal => {
+    const e = calcEstoque(metal);
+    const el = document.getElementById(`estoque-${metal.toLowerCase()}-detail`);
+    if (!el) return;
+    const perc = (e.inicial + e.totalCompras) > 0
+      ? Math.max(0, Math.min(100, (e.estoqueAtual / (e.inicial + e.totalCompras)) * 100)) : 0;
+    const isNeg = e.estoqueAtual < 0;
+    const colorClass = isNeg ? 'text-red' : metal === 'Ouro' ? 'text-gold' : 'text-silver';
+    const barColor = isNeg ? 'var(--red)' : metal === 'Ouro' ? 'var(--gold)' : 'var(--silver)';
+    el.innerHTML = `
+      <div class="stock-bar-wrap">
+        <div class="stock-bar-label"><span>Estoque Atual</span><span class="${colorClass}">${e.estoqueAtual.toFixed(4)} g ${isNeg ? '⚠️ NEGATIVO' : ''}</span></div>
+        <div class="stock-bar-track"><div class="stock-bar-fill" style="width:${perc}%;background:${barColor}"></div></div>
+      </div>
+      <table style="width:100%;font-size:13px;margin-top:12px;">
+        <tr><td style="color:var(--text3)">Inicial do mês</td><td class="text-right"><strong>${e.inicial.toFixed(4)} g</strong></td></tr>
+        <tr><td style="color:var(--text3)">+ Compras</td><td class="text-right text-green">+${e.totalCompras.toFixed(4)} g</td></tr>
+        <tr><td style="color:var(--text3)">+ Ajustes / Sobras</td><td class="text-right text-green">+${e.ajPos.toFixed(4)} g</td></tr>
+        <tr><td style="color:var(--text3)">− Consumo principal</td><td class="text-right text-red">-${e.consumoPrincipal.toFixed(4)} g</td></tr>
+        <tr><td style="color:var(--text3)">− ${metal === 'Ouro' ? 'Pré-Ouro' : 'Pré-Prata'}</td><td class="text-right text-red">-${(metal === 'Ouro' ? e.preOuro : e.prePrata).toFixed(4)} g</td></tr>
+        <tr><td style="color:var(--text3)">− Reforço / Montagem / Extra</td><td class="text-right text-red">-${(e.reforco+e.montagem+e.extra).toFixed(4)} g</td></tr>
+        <tr><td style="color:var(--text3)">− Perdas / Ajustes neg.</td><td class="text-right text-red">-${e.ajNeg.toFixed(4)} g</td></tr>
+        <tr style="border-top:2px solid var(--border);font-weight:700;"><td>= Estoque Atual</td><td class="text-right ${colorClass}">${e.estoqueAtual.toFixed(4)} g</td></tr>
+      </table>`;
+  });
+  renderMovimentacoes();
+}
+
+function renderMovimentacoes() {
+  const tbody = document.getElementById('tbody-movimentacoes');
+  if (!tbody) return;
+  const mes = getMesAtual();
+  const movs = [];
+
+  COMPRAS.filter(c => c.mes_key === mes).forEach(c => movs.push({ data: c.data, metal: c.metal, tipo: 'Compra', entrada: parseFloat(c.qtd_g), saida: 0, obs: c.fornecedor || c.obs }));
+  AJUSTES.filter(a => a.mes_key === mes).forEach(a => {
+    const isEnt = ['ajuste_positivo','sobra_reaproveitada'].includes(a.tipo);
+    const label = { ajuste_positivo: 'Ajuste +', ajuste_negativo: 'Ajuste -', perda: 'Perda', sobra_reaproveitada: 'Sobra Reaprov.' }[a.tipo] || a.tipo;
+    movs.push({ data: a.data, metal: a.metal, tipo: label, entrada: isEnt ? parseFloat(a.qtd_g) : 0, saida: isEnt ? 0 : parseFloat(a.qtd_g), obs: a.obs });
+  });
+  LANCAMENTOS.filter(l => l.mes_key === mes).forEach(l => {
+    const dia = l.datetime_lancamento?.split('T')[0];
+    const consumoFinal = l.consumo_real !== null ? parseFloat(l.consumo_real) : parseFloat(l.consumo_calc || 0);
+    if (consumoFinal > 0) movs.push({ data: dia, metal: l.metal, tipo: 'Consumo Banho', entrada: 0, saida: consumoFinal, obs: l.cor + ' / ' + l.camada });
+    if (parseFloat(l.pre_ouro) > 0) movs.push({ data: dia, metal: 'Ouro', tipo: 'Pré-Ouro', entrada: 0, saida: parseFloat(l.pre_ouro), obs: '' });
+    if (parseFloat(l.pre_prata) > 0) movs.push({ data: dia, metal: 'Prata', tipo: 'Pré-Prata', entrada: 0, saida: parseFloat(l.pre_prata), obs: '' });
+    if (parseFloat(l.reforco) > 0) movs.push({ data: dia, metal: l.metal, tipo: 'Reforço', entrada: 0, saida: parseFloat(l.reforco), obs: '' });
+    if (parseFloat(l.montagem) > 0) movs.push({ data: dia, metal: l.metal, tipo: 'Montagem', entrada: 0, saida: parseFloat(l.montagem), obs: '' });
+    if (parseFloat(l.extra) > 0) movs.push({ data: dia, metal: l.metal, tipo: 'Extra', entrada: 0, saida: parseFloat(l.extra), obs: '' });
+  });
+
+  movs.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+  if (movs.length === 0) { tbody.innerHTML = ''; document.getElementById('mov-no-data').classList.remove('hidden'); return; }
+  document.getElementById('mov-no-data').classList.add('hidden');
+
+  tbody.innerHTML = movs.map(m => `<tr>
+    <td>${formatDate(m.data)}</td>
+    <td><span class="badge ${m.metal === 'Ouro' ? 'badge-gold' : 'badge-silver'}">${m.metal}</span></td>
+    <td>${m.tipo}</td>
+    <td class="text-right text-green">${m.entrada > 0 ? '+' + m.entrada.toFixed(4) + ' g' : '—'}</td>
+    <td class="text-right text-red">${m.saida > 0 ? '-' + m.saida.toFixed(4) + ' g' : '—'}</td>
+    <td>${m.obs || '—'}</td>
+  </tr>`).join('');
+}
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
+function renderDashboard() {
+  const mes = getMesAtual();
+  const eO = calcEstoque('Ouro');
+  const eP = calcEstoque('Prata');
+  const lan = getLancamentosAtivos();
+  const hoje = new Date().toISOString().split('T')[0];
+  const lanHoje = lan.filter(l => l.datetime_lancamento?.startsWith(hoje));
+  const banhHoje = lanHoje.reduce((s, l) => s + parseFloat(l.peso_g || 0), 0);
+  const consOuroHoje = lanHoje.filter(l => l.metal === 'Ouro').reduce((s, l) => {
+    const cf = l.consumo_real !== null ? parseFloat(l.consumo_real || 0) : parseFloat(l.consumo_calc || 0);
+    return s + cf + parseFloat(l.pre_ouro || 0);
+  }, 0);
+  const banhMes = lan.reduce((s, l) => s + parseFloat(l.peso_g || 0), 0);
+  const consOuroMes = eO.consumoPrincipal + eO.consumoExtras;
+  const consPrataMes = eP.consumoPrincipal + eP.consumoExtras;
+
+  const cards = [
+    { label: 'Ouro Inicial', value: eO.inicial.toFixed(3) + ' g', sub: 'Mês atual', cls: 'gold', valCls: 'gold-val' },
+    { label: 'Prata Inicial', value: eP.inicial.toFixed(3) + ' g', sub: 'Mês atual', cls: 'silver', valCls: 'silver-val' },
+    { label: 'Compras Ouro', value: eO.totalCompras.toFixed(3) + ' g', sub: 'Mês atual', cls: 'gold' },
+    { label: 'Compras Prata', value: eP.totalCompras.toFixed(3) + ' g', sub: 'Mês atual', cls: 'silver' },
+    { label: 'Consumo Ouro Mês', value: consOuroMes.toFixed(4) + ' g', sub: 'Total de usos', cls: 'red', valCls: 'red-val' },
+    { label: 'Consumo Prata Mês', value: consPrataMes.toFixed(4) + ' g', sub: 'Total de usos', cls: 'orange' },
+    { label: 'Estoque Ouro', value: eO.estoqueAtual.toFixed(4) + ' g', sub: eO.estoqueAtual < 0 ? '⚠️ NEGATIVO' : 'Disponível', cls: eO.estoqueAtual < 0 ? 'red' : 'green', valCls: eO.estoqueAtual < 0 ? 'red-val' : 'green-val' },
+    { label: 'Estoque Prata', value: eP.estoqueAtual.toFixed(4) + ' g', sub: eP.estoqueAtual < 0 ? '⚠️ NEGATIVO' : 'Disponível', cls: eP.estoqueAtual < 0 ? 'red' : 'green', valCls: eP.estoqueAtual < 0 ? 'red-val' : 'green-val' },
+    { label: 'Consumo Ouro Hoje', value: consOuroHoje.toFixed(4) + ' g', sub: 'Dia atual', cls: 'blue' },
+    { label: 'Total Banhado Hoje', value: banhHoje.toFixed(3) + ' g', sub: `${lanHoje.length} lotes`, cls: 'blue' },
+    { label: 'Total Banhado Mês', value: (banhMes/1000).toFixed(3) + ' kg', sub: `${lan.length} lotes`, cls: 'green', valCls: 'green-val' },
+    { label: 'Pré-Ouro Mês', value: eO.preOuro.toFixed(4) + ' g', sub: 'Auxiliar', cls: 'orange' },
+    { label: 'Pré-Prata Mês', value: eP.prePrata.toFixed(4) + ' g', sub: 'Auxiliar', cls: 'orange' },
+    { label: 'Reforço Folheação', value: eO.reforco.toFixed(4) + ' g', sub: 'Mês atual', cls: 'purple' },
+    { label: 'Montagem de Cor', value: eO.montagem.toFixed(4) + ' g', sub: 'Mês atual', cls: 'purple' },
+    { label: 'Extras', value: eO.extra.toFixed(4) + ' g', sub: 'Mês atual', cls: 'purple' },
+  ];
+
+  document.getElementById('dash-cards').innerHTML = cards.map(c =>
+    `<div class="stat-card ${c.cls}">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value ${c.valCls || ''}">${c.value}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join('');
+
+  const detailTable = (e, metal) => `
+    <table style="width:100%;font-size:13px;">
+      <tr><td style="color:var(--text3)">Inicial</td><td class="text-right">${e.inicial.toFixed(4)} g</td></tr>
+      <tr><td style="color:var(--text3)">+ Compras</td><td class="text-right text-green">+${e.totalCompras.toFixed(4)} g</td></tr>
+      <tr><td style="color:var(--text3)">− Consumo principal</td><td class="text-right text-red">-${e.consumoPrincipal.toFixed(4)} g</td></tr>
+      <tr><td style="color:var(--text3)">− ${metal === 'Ouro' ? 'Pré-Ouro' : 'Pré-Prata'}</td><td class="text-right text-red">-${(metal === 'Ouro' ? e.preOuro : e.prePrata).toFixed(4)} g</td></tr>
+      <tr><td style="color:var(--text3)">− Extras e ajustes</td><td class="text-right text-red">-${(e.reforco+e.montagem+e.extra+e.ajNeg).toFixed(4)} g</td></tr>
+      <tr style="border-top:2px solid var(--border);font-weight:700;"><td>= Estoque</td>
+        <td class="text-right ${e.estoqueAtual < 0 ? 'text-red' : (metal === 'Ouro' ? 'text-gold' : 'text-silver')}">${e.estoqueAtual.toFixed(4)} g</td></tr>
+    </table>`;
+
+  document.getElementById('dash-gold-detail').innerHTML = detailTable(eO, 'Ouro');
+  document.getElementById('dash-silver-detail').innerHTML = detailTable(eP, 'Prata');
+
+  // Por cor
+  const byCor = {};
+  lan.forEach(l => {
+    const cf = l.consumo_real !== null ? parseFloat(l.consumo_real || 0) : parseFloat(l.consumo_calc || 0);
+    if (!byCor[l.cor]) byCor[l.cor] = { peso: 0, cons: 0 };
+    byCor[l.cor].peso += parseFloat(l.peso_g || 0);
+    byCor[l.cor].cons += cf;
+  });
+  const corList = Object.entries(byCor).sort((a, b) => b[1].cons - a[1].cons);
+  const maxCor = corList[0]?.[1].cons || 1;
+  document.getElementById('dash-by-color').innerHTML = corList.length ?
+    `<ul class="rank-list">${corList.map(([cor, v], i) => `<li>
+      <div class="rank-num">${i+1}</div>
+      <div style="flex:1"><div style="font-weight:600;">${cor}</div>
+      <div class="rank-bar"><div class="rank-bar-fill" style="width:${(v.cons/maxCor*100).toFixed(1)}%"></div></div></div>
+      <div class="rank-val">${v.cons.toFixed(4)} g<br><span style="color:var(--text3);font-size:11px;">${v.peso.toFixed(3)} g banhado</span></div>
+    </li>`).join('')}</ul>` : '<div class="no-data">Sem dados.</div>';
+
+  // Por tipo
+  const byTipo = {};
+  lan.forEach(l => {
+    const cf = l.consumo_real !== null ? parseFloat(l.consumo_real || 0) : parseFloat(l.consumo_calc || 0);
+    if (!byTipo[l.tipo_peca]) byTipo[l.tipo_peca] = { peso: 0, cons: 0 };
+    byTipo[l.tipo_peca].peso += parseFloat(l.peso_g || 0);
+    byTipo[l.tipo_peca].cons += cf;
+  });
+  const tipoList = Object.entries(byTipo).sort((a, b) => b[1].cons - a[1].cons);
+  const maxTipo = tipoList[0]?.[1].cons || 1;
+  document.getElementById('dash-by-piece').innerHTML = tipoList.length ?
+    `<ul class="rank-list">${tipoList.map(([tipo, v], i) => `<li>
+      <div class="rank-num">${i+1}</div>
+      <div style="flex:1"><div style="font-weight:600;">${tipo}</div>
+      <div class="rank-bar"><div class="rank-bar-fill" style="width:${(v.cons/maxTipo*100).toFixed(1)}%;background:var(--blue)"></div></div></div>
+      <div class="rank-val">${v.cons.toFixed(4)} g</div>
+    </li>`).join('')}</ul>` : '<div class="no-data">Sem dados.</div>';
+
+  drawDailyChart(lan);
+}
+
+function drawDailyChart(lan) {
+  const canvas = document.getElementById('chart-daily');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.parentElement?.clientWidth || 900;
+  const H = 220;
+  canvas.width = W; canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+
+  const byDay = {};
+  lan.forEach(l => {
+    const d = l.datetime_lancamento?.split('T')[0];
+    if (!d) return;
+    if (!byDay[d]) byDay[d] = { ouro: 0, prata: 0 };
+    const cf = l.consumo_real !== null ? parseFloat(l.consumo_real || 0) : parseFloat(l.consumo_calc || 0);
+    if (l.metal === 'Ouro') byDay[d].ouro += cf;
+    else byDay[d].prata += cf;
+  });
+
+  const days = Object.keys(byDay).sort();
+  if (days.length === 0) {
+    ctx.fillStyle = '#9aa5b4'; ctx.font = '14px Segoe UI'; ctx.textAlign = 'center';
+    ctx.fillText('Sem dados no mês', W/2, H/2); return;
+  }
+
+  const padL = 60, padR = 20, padT = 20, padB = 40;
+  const cW = W - padL - padR, cH = H - padT - padB;
+  const maxVal = Math.max(...days.map(d => byDay[d].ouro + byDay[d].prata), 0.001);
+  const barW = Math.max(8, Math.floor(cW / days.length) - 4);
+
+  ctx.strokeStyle = '#e2e6ea'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + cH - (cH * i / 4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillStyle = '#9aa5b4'; ctx.font = '11px Segoe UI'; ctx.textAlign = 'right';
+    ctx.fillText((maxVal * i / 4).toFixed(3), padL - 6, y + 4);
+  }
+
+  days.forEach((d, i) => {
+    const x = padL + (i / days.length) * cW + (cW / days.length - barW) / 2;
+    const v = byDay[d];
+    const totH = ((v.ouro + v.prata) / maxVal) * cH;
+    const ouroH = (v.ouro / maxVal) * cH;
+    if (v.prata > 0) { ctx.fillStyle = '#6b7a8d'; ctx.fillRect(x, padT + cH - totH, barW, (v.prata/maxVal)*cH); }
+    if (v.ouro > 0) { ctx.fillStyle = '#c9952a'; ctx.fillRect(x, padT + cH - ouroH, barW, ouroH); }
+    ctx.fillStyle = '#9aa5b4'; ctx.font = '10px Segoe UI'; ctx.textAlign = 'center';
+    ctx.fillText(d.split('-')[2], x + barW/2, H - padB + 14);
+  });
+
+  ctx.fillStyle = '#c9952a'; ctx.fillRect(padL, H - 16, 12, 10);
+  ctx.fillStyle = '#333'; ctx.font = '11px Segoe UI'; ctx.textAlign = 'left';
+  ctx.fillText('Ouro', padL + 16, H - 7);
+  ctx.fillStyle = '#6b7a8d'; ctx.fillRect(padL + 60, H - 16, 12, 10);
+  ctx.fillStyle = '#333'; ctx.fillText('Prata', padL + 76, H - 7);
+}
+
+/* ============================================================
+   RELATÓRIOS
+============================================================ */
+function updatePeriodFilter() {
+  const p = document.getElementById('r-periodo').value;
+  document.getElementById('r-data-ini').classList.toggle('hidden', p !== 'custom');
+  document.getElementById('r-data-fim').classList.toggle('hidden', p !== 'custom');
+}
+
+function getPeriodDates() {
+  const p = document.getElementById('r-periodo').value;
+  const now = new Date();
+  let ini, fim;
+  if (p === 'dia') { ini = fim = now.toISOString().split('T')[0]; }
+  else if (p === 'semana') {
+    const day = now.getDay();
+    const d = new Date(now); d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+    ini = d.toISOString().split('T')[0]; fim = now.toISOString().split('T')[0];
+  } else if (p === 'mes') {
+    ini = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    fim = now.toISOString().split('T')[0];
+  } else {
+    ini = document.getElementById('r-data-ini').value;
+    fim = document.getElementById('r-data-fim').value;
+  }
+  return { ini, fim };
+}
+
+function gerarRelatorio() {
+  const { ini, fim } = getPeriodDates();
+  const fMetal = document.getElementById('r-metal')?.value;
+  const el = document.getElementById('relatorio-content');
+  if (!el) return;
+
+  let lan = LANCAMENTOS.filter(l => {
+    const d = l.datetime_lancamento?.split('T')[0];
+    return (!ini || d >= ini) && (!fim || d <= fim);
+  });
+  if (fMetal) lan = lan.filter(l => l.metal === fMetal);
+
+  const eO = calcEstoque('Ouro');
+  const eP = calcEstoque('Prata');
+
+  const totalPeso = lan.reduce((s, l) => s + parseFloat(l.peso_g || 0), 0);
+  const totalOuro = lan.filter(l => l.metal === 'Ouro').reduce((s, l) => {
+    return s + (l.consumo_real !== null ? parseFloat(l.consumo_real || 0) : parseFloat(l.consumo_calc || 0));
+  }, 0);
+  const totalPrata = lan.filter(l => l.metal === 'Prata').reduce((s, l) => {
+    return s + (l.consumo_real !== null ? parseFloat(l.consumo_real || 0) : parseFloat(l.consumo_calc || 0));
+  }, 0);
+  const totPreO = lan.reduce((s, l) => s + parseFloat(l.pre_ouro || 0), 0);
+  const totPreP = lan.reduce((s, l) => s + parseFloat(l.pre_prata || 0), 0);
+  const totRef = lan.reduce((s, l) => s + parseFloat(l.reforco || 0), 0);
+  const totMont = lan.reduce((s, l) => s + parseFloat(l.montagem || 0), 0);
+  const totExtra = lan.reduce((s, l) => s + parseFloat(l.extra || 0), 0);
+
+  const byCor = {}, byTipo = {}, byCamada = {};
+  lan.forEach(l => {
+    const cf = l.consumo_real !== null ? parseFloat(l.consumo_real || 0) : parseFloat(l.consumo_calc || 0);
+    const peso = parseFloat(l.peso_g || 0);
+    if (!byCor[l.cor]) byCor[l.cor] = { pesoG: 0, cons: 0, lotes: 0 };
+    byCor[l.cor].pesoG += peso; byCor[l.cor].cons += cf; byCor[l.cor].lotes++;
+    if (!byTipo[l.tipo_peca]) byTipo[l.tipo_peca] = { pesoG: 0, cons: 0, lotes: 0 };
+    byTipo[l.tipo_peca].pesoG += peso; byTipo[l.tipo_peca].cons += cf; byTipo[l.tipo_peca].lotes++;
+    if (!byCamada[l.camada]) byCamada[l.camada] = { pesoG: 0, cons: 0, lotes: 0 };
+    byCamada[l.camada].pesoG += peso; byCamada[l.camada].cons += cf; byCamada[l.camada].lotes++;
+  });
+
+  const divLan = lan.filter(l => l.consumo_real !== null && Math.abs(parseFloat(l.consumo_real || 0) - parseFloat(l.consumo_calc || 0)) > 0.05);
+
+  const rankTable = (obj, label) => {
+    const sorted = Object.entries(obj).sort((a,b) => b[1].cons - a[1].cons);
+    if (!sorted.length) return '<div class="no-data">Sem dados.</div>';
+    return `<table style="width:100%;font-size:13px;">
+      <thead><tr><th>${label}</th><th class="text-right">Banhado (g)</th><th class="text-right">Metal (g)</th><th class="text-right">Lotes</th></tr></thead>
+      <tbody>${sorted.map(([k,v]) => `<tr><td>${k}</td><td class="text-right">${v.pesoG?.toFixed(3)}</td><td class="text-right text-gold">${v.cons.toFixed(4)}</td><td class="text-right">${v.lotes}</td></tr>`).join('')}</tbody>
+    </table>`;
+  };
+
+  el.innerHTML = `
+    <div class="card"><div class="card-title">📊 Resumo — ${ini || '—'} a ${fim || '—'}</div>
+      <div class="grid-cards">
+        <div class="stat-card gold"><div class="stat-label">Total Banhado</div><div class="stat-value">${totalPeso.toFixed(3)} g</div><div class="stat-sub">${lan.length} lotes</div></div>
+        <div class="stat-card gold"><div class="stat-label">Consumo Ouro</div><div class="stat-value gold-val">${totalOuro.toFixed(4)} g</div></div>
+        <div class="stat-card silver"><div class="stat-label">Consumo Prata</div><div class="stat-value silver-val">${totalPrata.toFixed(4)} g</div></div>
+        <div class="stat-card orange"><div class="stat-label">Pré-Ouro</div><div class="stat-value">${totPreO.toFixed(4)} g</div></div>
+        <div class="stat-card orange"><div class="stat-label">Pré-Prata</div><div class="stat-value">${totPreP.toFixed(4)} g</div></div>
+        <div class="stat-card blue"><div class="stat-label">Reforço Folh.</div><div class="stat-value">${totRef.toFixed(4)} g</div></div>
+        <div class="stat-card blue"><div class="stat-label">Montagem Cor</div><div class="stat-value">${totMont.toFixed(4)} g</div></div>
+        <div class="stat-card purple"><div class="stat-label">Extras</div><div class="stat-value">${totExtra.toFixed(4)} g</div></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-title">🎨 Ranking por Cor</div>${rankTable(byCor, 'Cor')}</div>
+      <div class="card"><div class="card-title">💎 Ranking por Tipo</div>${rankTable(byTipo, 'Tipo')}</div>
+    </div>
+    <div class="card"><div class="card-title">🔩 Consumo por Camada</div>${rankTable(byCamada, 'Camada')}</div>
+    ${divLan.length > 0 ? `<div class="card"><div class="card-title">⚠️ Divergências Calc × Real</div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>Data</th><th>Metal</th><th>Cor</th><th>Calc.</th><th>Real</th><th>Diferença</th></tr></thead>
+        <tbody>${divLan.map(l => `<tr>
+          <td>${l.datetime_lancamento?.substring(0,16)}</td><td>${l.metal}</td><td>${l.cor}</td>
+          <td class="text-right">${parseFloat(l.consumo_calc).toFixed(4)}</td>
+          <td class="text-right">${parseFloat(l.consumo_real).toFixed(4)}</td>
+          <td class="text-right text-red">${(parseFloat(l.consumo_real)-parseFloat(l.consumo_calc)).toFixed(4)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div></div>` : ''}
+    <div class="card"><div class="card-title">🏭 Estoque Atual</div>
+      <div class="two-col">
+        <div><strong class="text-gold">Ouro</strong>
+          <table style="width:100%;font-size:13px;margin-top:8px;">
+            <tr><td>Inicial</td><td class="text-right">${eO.inicial.toFixed(4)} g</td></tr>
+            <tr><td>+ Compras</td><td class="text-right">${eO.totalCompras.toFixed(4)} g</td></tr>
+            <tr><td>− Consumo total</td><td class="text-right">${(eO.consumoPrincipal+eO.consumoExtras).toFixed(4)} g</td></tr>
+            <tr style="font-weight:700;border-top:2px solid var(--border);"><td>= Estoque</td><td class="text-right text-gold">${eO.estoqueAtual.toFixed(4)} g</td></tr>
+          </table>
+        </div>
+        <div><strong class="text-silver">Prata</strong>
+          <table style="width:100%;font-size:13px;margin-top:8px;">
+            <tr><td>Inicial</td><td class="text-right">${eP.inicial.toFixed(4)} g</td></tr>
+            <tr><td>+ Compras</td><td class="text-right">${eP.totalCompras.toFixed(4)} g</td></tr>
+            <tr><td>− Consumo total</td><td class="text-right">${(eP.consumoPrincipal+eP.consumoExtras).toFixed(4)} g</td></tr>
+            <tr style="font-weight:700;border-top:2px solid var(--border);"><td>= Estoque</td><td class="text-right text-silver">${eP.estoqueAtual.toFixed(4)} g</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function exportarCSV() {
+  const { ini, fim } = getPeriodDates();
+  let lan = LANCAMENTOS.filter(l => {
+    const d = l.datetime_lancamento?.split('T')[0];
+    return (!ini || d >= ini) && (!fim || d <= fim);
+  });
+  const headers = ['Data/Hora','Metal','Tipo','Peso(g)','Cor','Camada','Tanque','Cons.Calc','Cons.Real','Pré-Ouro','Pré-Prata','Reforço','Montagem','Extra','Cliente','OS','Obs'];
+  const rows = lan.map(l => [l.datetime_lancamento, l.metal, l.tipo_peca, l.peso_g, l.cor, l.camada, l.tanque||'', l.consumo_calc||'', l.consumo_real||'', l.pre_ouro||'', l.pre_prata||'', l.reforco||'', l.montagem||'', l.extra||'', l.cliente||'', l.os||'', l.obs||'']);
+  downloadFile(`metais_${ini}_${fim}.csv`, [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n'), 'text/csv');
+}
+
+function exportarCSVCompleto() {
+  const headers = ['Data/Hora','Metal','Tipo','Peso(g)','Cor','Camada','Tanque','Cons.Calc','Cons.Real','Pré-Ouro','Pré-Prata','Reforço','Montagem','Extra','Cliente','OS','Mês','Obs'];
+  const rows = LANCAMENTOS.map(l => [l.datetime_lancamento, l.metal, l.tipo_peca, l.peso_g, l.cor, l.camada, l.tanque||'', l.consumo_calc||'', l.consumo_real||'', l.pre_ouro||'', l.pre_prata||'', l.reforco||'', l.montagem||'', l.extra||'', l.cliente||'', l.os||'', l.mes_key, l.obs||'']);
+  downloadFile(`metais_completo_${new Date().toISOString().split('T')[0]}.csv`, [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n'), 'text/csv');
+  showToast('CSV exportado!', 'success');
+}
+
+/* ============================================================
+   FECHAMENTO MENSAL
+============================================================ */
+function renderFechamento() {
+  const el = document.getElementById('meses-lista');
+  if (!el) return;
+  const fechados = MESES.filter(m => m.status === 'fechado');
+  if (!fechados.length) { el.innerHTML = '<div class="no-data">Nenhum mês fechado ainda.</div>'; return; }
+  el.innerHTML = `<div class="table-wrapper"><table>
+    <thead><tr><th>Mês</th><th>Status</th><th>Ouro Inicial</th><th>Prata Inicial</th><th>Est. Final Ouro</th><th>Est. Final Prata</th><th>Fechado em</th></tr></thead>
+    <tbody>${fechados.map(m => `<tr>
+      <td><strong>${formatMonthKey(m.mes_key)}</strong></td>
+      <td><span class="month-closed-badge">🔒 Fechado</span></td>
+      <td>${parseFloat(m.ouro_inicial||0).toFixed(4)} g</td>
+      <td>${parseFloat(m.prata_inicial||0).toFixed(4)} g</td>
+      <td class="text-gold">${parseFloat(m.ouro_final||0).toFixed(4)} g</td>
+      <td class="text-silver">${parseFloat(m.prata_final||0).toFixed(4)} g</td>
+      <td>${m.fechado_em ? m.fechado_em.substring(0,16).replace('T',' ') : '—'}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+async function fecharMes() {
+  const novoOuro = parseFloat(document.getElementById('fm-ouro').value) || 0;
+  const novoPrata = parseFloat(document.getElementById('fm-prata').value) || 0;
+  if (!confirm('Confirma o fechamento do mês? Os lançamentos serão travados.')) return;
+
+  const mes = getMesAtual();
+  const eO = calcEstoque('Ouro');
+  const eP = calcEstoque('Prata');
+
+  try {
+    setSyncStatus('loading', '⏳ Fechando mês...');
+    // Atualiza o mês atual para fechado
+    await fetch(`${SUPABASE_URL}/rest/v1/metais_meses?mes_key=eq.${mes}`, {
+      method: 'PATCH',
+      headers: SB_HEADERS,
+      body: JSON.stringify({ status: 'fechado', ouro_final: eO.estoqueAtual, prata_final: eP.estoqueAtual, fechado_em: new Date().toISOString() })
+    });
+
+    // Trava lançamentos
+    await fetch(`${SUPABASE_URL}/rest/v1/metais_lancamentos?mes_key=eq.${mes}`, {
+      method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify({ fechado: true })
+    });
+    await fetch(`${SUPABASE_URL}/rest/v1/metais_compras?mes_key=eq.${mes}`, {
+      method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify({ fechado: true })
+    });
+
+    // Cria novo mês
+    const proximoMes = getNextMonthKey(mes);
+    CFG.ouro_inicial = CFG.ouro_inicial || {};
+    CFG.prata_inicial = CFG.prata_inicial || {};
+    CFG.ouro_inicial[proximoMes] = novoOuro;
+    CFG.prata_inicial[proximoMes] = novoPrata;
+    await salvarConfig('ouro_inicial');
+    await salvarConfig('prata_inicial');
+
+    const novoMesRow = await sbPost('metais_meses', { mes_key: proximoMes, status: 'aberto', ouro_inicial: novoOuro, prata_inicial: novoPrata });
+
+    // Recarrega dados
+    await carregarDados();
+    setSyncStatus('ok', '✓ Online');
+    document.getElementById('topbar-month-label').textContent = formatMonthKey(proximoMes);
+    renderFechamento();
+    renderDashboard();
+    showToast(`Mês ${formatMonthKey(mes)} fechado!`, 'success');
+  } catch(e) { setSyncStatus('err', '✗ Erro'); showToast('Erro: ' + e.message, 'error'); }
+}
+
+function getNextMonthKey(mes) {
+  const [y, m] = mes.split('-').map(Number);
+  const next = new Date(y, m, 1);
+  return `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
+}
+
+/* ============================================================
+   CONFIGURAÇÕES
+============================================================ */
+function renderConfig() {
+  renderConfigList('cores', 'cfg-cores-list');
+  renderConfigList('tipos', 'cfg-tipos-list');
+  renderConfigList('tanques', 'cfg-tanques-list');
+  renderCamadasList('Ouro');
+  renderCamadasList('Prata');
+
+  const mes = getMesAtual();
+  document.getElementById('cfg-ouro-inicial').value = CFG.ouro_inicial?.[mes] || '';
+  document.getElementById('cfg-prata-inicial').value = CFG.prata_inicial?.[mes] || '';
+
+  renderCoefTable();
+}
+
+function renderConfigList(tipo, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const items = CFG[tipo] || [];
+  el.innerHTML = items.map((item, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="flex:1;font-size:13px;">${item}</span>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="removeConfig('${tipo}',${i})">×</button>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:12px;padding:8px 0;">Nenhum item.</div>';
+}
+
+async function addConfig(tipo) {
+  const inputId = { cores: 'cfg-cor-nova', tipos: 'cfg-tipo-novo', tanques: 'cfg-tanque-novo' }[tipo];
+  const val = document.getElementById(inputId).value.trim();
+  if (!val || CFG[tipo].includes(val)) return;
+  CFG[tipo].push(val);
+  await salvarConfig(tipo);
+  renderConfig(); populateSelects();
+  document.getElementById(inputId).value = '';
+  showToast('Item adicionado!', 'success');
+}
+
+async function removeConfig(tipo, idx) {
+  if (!confirm('Remover este item?')) return;
+  CFG[tipo].splice(idx, 1);
+  await salvarConfig(tipo);
+  renderConfig(); populateSelects();
+}
+
+function renderCamadasList(metal) {
+  const key = metal === 'Ouro' ? 'camadas_ouro' : 'camadas_prata';
+  const id = metal === 'Ouro' ? 'cfg-camadas-ouro-list' : 'cfg-camadas-prata-list';
+  const el = document.getElementById(id);
+  if (!el) return;
+  const items = CFG[key] || [];
+  el.innerHTML = items.map((c, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span style="flex:1;font-size:13px;">${c.nome}</span>
+      <span style="font-size:11px;color:var(--text3);">${c.valor}</span>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="removeCamada('${metal}',${i})">×</button>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:12px;">Nenhuma camada.</div>';
+}
+
+async function addCamada(metal) {
+  const key = metal === 'Ouro' ? 'camadas_ouro' : 'camadas_prata';
+  const s = metal === 'Ouro' ? 'ouro' : 'prata';
+  const nome = document.getElementById(`cfg-camada-${s}-nova`).value.trim();
+  const valor = parseFloat(document.getElementById(`cfg-camada-${s}-valor`).value) || 0;
+  if (!nome) return;
+  CFG[key].push({ nome, valor });
+  await salvarConfig(key);
+  renderConfig(); updateCamadas();
+}
+
+async function removeCamada(metal, idx) {
+  if (!confirm('Remover esta camada?')) return;
+  const key = metal === 'Ouro' ? 'camadas_ouro' : 'camadas_prata';
+  CFG[key].splice(idx, 1);
+  await salvarConfig(key);
+  renderConfig(); updateCamadas();
+}
+
+async function salvarIniciais() {
+  const mes = getMesAtual();
+  if (!CFG.ouro_inicial) CFG.ouro_inicial = {};
+  if (!CFG.prata_inicial) CFG.prata_inicial = {};
+  CFG.ouro_inicial[mes] = parseFloat(document.getElementById('cfg-ouro-inicial').value) || 0;
+  CFG.prata_inicial[mes] = parseFloat(document.getElementById('cfg-prata-inicial').value) || 0;
+  await salvarConfig('ouro_inicial');
+  await salvarConfig('prata_inicial');
+
+  // Atualiza também a tabela de meses
+  await fetch(`${SUPABASE_URL}/rest/v1/metais_meses?mes_key=eq.${mes}`, {
+    method: 'PATCH', headers: SB_HEADERS,
+    body: JSON.stringify({ ouro_inicial: CFG.ouro_inicial[mes], prata_inicial: CFG.prata_inicial[mes] })
+  });
+
+  renderDashboard(); checkAlerts();
+  showToast('Valores iniciais salvos!', 'success');
+}
+
+function renderCoefTable() {
+  const el = document.getElementById('coef-table-container');
+  if (!el) return;
+  const { cores, tipos } = CFG;
+  const coef = CFG.coeficientes || {};
+  let html = `<div style="overflow-x:auto;"><table class="coef-table">
+    <thead><tr><th>Metal</th><th>Tipo Peça</th><th>Cor</th><th>Coef. (g metal / g peça)</th></tr></thead><tbody>`;
+  ['Ouro','Prata'].forEach(metal => {
+    tipos.forEach(tipo => {
+      cores.forEach(cor => {
+        const key = `${metal}|${tipo}|${cor}`;
+        html += `<tr><td><span class="badge ${metal === 'Ouro' ? 'badge-gold' : 'badge-silver'}">${metal}</span></td><td>${tipo}</td><td>${cor}</td>
+          <td><input type="number" step="0.00001" placeholder="Auto" data-key="${key}" value="${coef[key] !== undefined ? coef[key] : ''}"></td></tr>`;
+      });
+    });
+  });
+  html += `</tbody></table></div>`;
+  el.innerHTML = html;
+}
+
+async function salvarCoeficientes() {
+  document.querySelectorAll('#coef-table-container input').forEach(inp => {
+    const key = inp.getAttribute('data-key');
+    const val = inp.value.trim();
+    if (!CFG.coeficientes) CFG.coeficientes = {};
+    if (val !== '') CFG.coeficientes[key] = parseFloat(val);
+    else delete CFG.coeficientes[key];
+  });
+  await salvarConfig('coeficientes');
+  showToast('Coeficientes salvos!', 'success');
+}
+
+/* ============================================================
+   ALERTAS
+============================================================ */
+function checkAlerts() {
+  const el = document.getElementById('global-alerts');
+  if (!el) return;
+  const alerts = [];
+  const eO = calcEstoque('Ouro');
+  const eP = calcEstoque('Prata');
+  if (eO.estoqueAtual < 0) alerts.push({ type: 'danger', msg: `⚠️ Estoque de Ouro NEGATIVO: ${eO.estoqueAtual.toFixed(4)} g` });
+  if (eP.estoqueAtual < 0) alerts.push({ type: 'danger', msg: `⚠️ Estoque de Prata NEGATIVO: ${eP.estoqueAtual.toFixed(4)} g` });
+  if (eO.estoqueAtual >= 0 && eO.estoqueAtual < 2) alerts.push({ type: 'warning', msg: `⚡ Estoque de Ouro baixo: ${eO.estoqueAtual.toFixed(4)} g` });
+  if (eP.estoqueAtual >= 0 && eP.estoqueAtual < 5) alerts.push({ type: 'warning', msg: `⚡ Estoque de Prata baixo: ${eP.estoqueAtual.toFixed(4)} g` });
+  const divs = LANCAMENTOS.filter(l => l.consumo_real !== null && Math.abs(parseFloat(l.consumo_real||0) - parseFloat(l.consumo_calc||0)) > 0.1);
+  if (divs.length > 0) alerts.push({ type: 'warning', msg: `📊 ${divs.length} lançamento(s) com divergência > 0,1 g entre calculado e real.` });
+  el.innerHTML = alerts.map(a => `<div class="alert alert-${a.type}">${a.msg}</div>`).join('');
+}
+
+/* ============================================================
+   UTILITÁRIOS
+============================================================ */
+function formatDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.substring(0,10).split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function formatMonthKey(key) {
+  if (!key) return '—';
+  const [y, m] = key.split('-');
+  return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(m)-1] + '/' + y;
+}
+
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;background:${type==='success'?'#1e7e4e':type==='error'?'#c0392b':'#d45d00'};color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:slideIn 0.2s ease;max-width:340px;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+/* ============================================================
+   START
+============================================================ */
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
