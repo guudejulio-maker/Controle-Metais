@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Metais">
+<meta name="theme-color" content="#1a1d23">
 <title>Controle de Metais — Galvanoplastia</title>
 <style>
 :root{
@@ -78,7 +82,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .lrow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
 .lf{display:flex;flex-direction:column;gap:4px;flex:1;min-width:110px}
 .lf label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7a8d}
-.lf input,.lf select{background:#2d3340;border:1.5px solid #3d4455;border-radius:var(--rs);padding:9px 11px;font-size:14px;color:#fff;outline:none;width:100%;transition:border-color .15s;font-family:inherit}
+.lf input,.lf select{background:#2d3340;border:1.5px solid #3d4455;border-radius:var(--rs);padding:9px 11px;font-size:16px;color:#fff;outline:none;width:100%;transition:border-color .15s;font-family:inherit;-webkit-appearance:none;touch-action:manipulation}
 .lf input:focus,.lf select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,149,42,.12)}
 .lf input::placeholder{color:#4a5568}
 .lf select option{background:#22262f;color:#fff}
@@ -100,7 +104,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:14px}
 .fi{display:flex;flex-direction:column;gap:4px}
 .fi label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2)}
-.fi input,.fi select,.fi textarea{border:1.5px solid var(--border2);border-radius:var(--rs);padding:8px 10px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;width:100%;transition:border-color .15s}
+.fi input,.fi select,.fi textarea{border:1.5px solid var(--border2);border-radius:var(--rs);padding:8px 10px;font-size:16px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;width:100%;transition:border-color .15s;-webkit-appearance:none;touch-action:manipulation}
 .fi input:focus,.fi select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,149,42,.1)}
 
 /* BUTTONS */
@@ -175,7 +179,89 @@ td{padding:8px 12px;vertical-align:middle}
 .ltx{color:#fff;font-size:13px;font-weight:600}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
-@media(max-width:768px){.main{padding:12px}.grid{grid-template-columns:repeat(2,1fr)}.lrow{flex-direction:column}.topbar{padding:0 12px}}
+/* ── TABLET (≤900px) ── */
+@media(max-width:900px){
+  .three{grid-template-columns:1fr 1fr}
+  .two{grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:repeat(3,1fr)}
+  .lrow{flex-wrap:wrap}
+  .lf.wflex{min-width:100%}
+}
+
+/* ── MOBILE (≤600px) ── */
+@media(max-width:600px){
+  .topbar{padding:0 10px;height:48px}
+  .brand{font-size:12px;gap:5px}
+  .dot-g,.dot-s{font-size:16px}
+  .mes-info{display:none}
+  .sync{font-size:10px;padding:2px 8px}
+
+  .nav{padding:0 4px}
+  .ntab{padding:8px 10px;font-size:11px}
+
+  .main{padding:10px}
+
+  /* Cards de stats: 2 colunas no celular */
+  .grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat{padding:10px}
+  .sval{font-size:16px}
+
+  /* Layout: tudo em coluna única */
+  .two,.three{grid-template-columns:1fr}
+
+  /* Lançamento: campos em coluna */
+  .lrow{flex-direction:column;gap:8px}
+  .lf,.lf.w90,.lf.w110,.lf.w130,.lf.w160,.lf.wflex{flex:1 1 100%;min-width:unset;width:100%}
+  .lan-body{padding:12px}
+  .lan-tabs{padding:0 8px}
+  .ltab{padding:8px 10px;font-size:11px}
+  .btn-save{width:100%;padding:12px;font-size:14px}
+  .prev{font-size:12px;padding:8px 10px}
+  .prev strong{font-size:15px}
+
+  /* Formulários */
+  .fg{grid-template-columns:1fr}
+  .card{padding:12px}
+  .ct{font-size:10px}
+
+  /* Tabelas: scroll horizontal já existe, melhorar touch */
+  .tw{-webkit-overflow-scrolling:touch}
+  table{font-size:12px}
+  thead th{padding:8px 8px;font-size:9px}
+  td{padding:7px 8px}
+
+  /* Botões menores */
+  .btn{padding:7px 12px;font-size:11px}
+  .bsm{padding:4px 8px;font-size:10px}
+  .bic{width:26px;height:26px}
+
+  /* Filtros empilham */
+  .fbar{flex-direction:column;align-items:stretch;gap:6px;padding:10px}
+  .fbar input,.fbar select{min-width:unset;width:100%}
+
+  /* Histórico: oculta colunas menos importantes */
+  .col-obs,.col-acoes-extra{display:none}
+
+  /* Edit bar */
+  .edit-bar{flex-wrap:wrap;font-size:11px;padding:6px 12px}
+
+  /* Botão salvar ajuste/compra */
+  .brow{flex-direction:column}
+  .brow .btn{width:100%}
+
+  /* Dashboard rank */
+  .rank li{gap:6px}
+
+  /* Gráfico */
+  .ch{height:160px}
+
+  /* Fechamento: cards de mês */
+  .mes-card{flex-direction:column;gap:6px;align-items:flex-start}
+  .mes-card-vals{flex-wrap:wrap;gap:8px}
+
+  /* Topbar mês label em versão compacta */
+  #mes-label{font-size:11px}
+}
 
 /* TABS dentro de cards */
 .card-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:-18px -18px 16px;padding:0 18px;overflow-x:auto;scrollbar-width:none}
