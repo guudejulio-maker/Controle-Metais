@@ -1275,55 +1275,235 @@ function getPerDates() {
 }
 
 function gerarRel() {
-  const {ini,fim}=getPerDates(),fm=document.getElementById('r-metal')?.value,el=document.getElementById('rel-out'); if(!el) return;
+  const {ini,fim}=getPerDates(), fm=document.getElementById('r-metal')?.value, el=document.getElementById('rel-out'); if(!el) return;
   let lan=LAN.filter(l=>{ const d=l.datetime_lancamento?.split('T')[0]; return(!ini||d>=ini)&&(!fim||d<=fim); });
   if(fm) lan=lan.filter(l=>l.metal===fm);
-  const eO=calcEst('Ouro'),eP=calcEst('Prata');
-  const tO=lan.filter(l=>l.metal==='Ouro').reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
-  const tP=lan.filter(l=>l.metal==='Prata').reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
 
-  // Por tipo
-  const byTipo={};
-  lan.forEach(l=>{ const tl=l.tipo_lancamento||'flash'; const c=parseFloat(l.consumo_calc||0); if(!byTipo[tl]) byTipo[tl]={c:0,n:0}; byTipo[tl].c+=c; byTipo[tl].n++; });
+  if(!lan.length && !COMP.filter(c=>{ const d=c.data; return(!ini||d>=ini)&&(!fim||d<=fim); }).length) {
+    el.innerHTML='<div class="card"><div class="nd">Nenhum dado encontrado para o período selecionado.</div></div>'; return;
+  }
 
-  // Por cor (flash)
-  const byCor={};
-  lan.filter(l=>l.tipo_lancamento==='flash').forEach(l=>{ const c=parseFloat(l.consumo_calc||0); if(!byCor[l.cor]) byCor[l.cor]={c:0,n:0}; byCor[l.cor].c+=c; byCor[l.cor].n++; });
+  /* ── TOTAIS GERAIS ── */
+  const eO=calcEst('Ouro'), eP=calcEst('Prata');
+  const lanO=lan.filter(l=>l.metal==='Ouro'), lanP=lan.filter(l=>l.metal==='Prata');
+  const tO=lanO.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+  const tP=lanP.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+  const tPesoO=lanO.filter(l=>parseFloat(l.peso_g||0)>0).reduce((s,l)=>s+parseFloat(l.peso_g||0),0);
+  const tPesoP=lanP.filter(l=>parseFloat(l.peso_g||0)>0).reduce((s,l)=>s+parseFloat(l.peso_g||0),0);
 
-  // Por dia
-  const byDia={};
-  lan.forEach(l=>{ const d=l.datetime_lancamento?.split('T')[0]; if(!d) return; if(!byDia[d]) byDia[d]={o:0,p:0,n:0}; const c=parseFloat(l.consumo_calc||0); if(l.metal==='Ouro') byDia[d].o+=c; else byDia[d].p+=c; byDia[d].n++; });
-  const diasL=Object.entries(byDia).sort((a,b)=>b[0].localeCompare(a[0]));
-
-  // Compras no período
+  /* ── COMPRAS ── */
   const comps=COMP.filter(c=>{ const d=c.data; return(!ini||d>=ini)&&(!fim||d<=fim); });
   const tCompO=comps.filter(c=>c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
   const tCompP=comps.filter(c=>c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
   const tValO=comps.filter(c=>c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
   const tValP=comps.filter(c=>c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
 
-  const rT=(obj)=>{ const s=Object.entries(obj).sort((a,b)=>b[1].c-a[1].c); if(!s.length) return '<div class="nd">Sem dados.</div>'; return `<table style="width:100%;font-size:12px"><thead><tr><th>Tipo</th><th class="tr">Consumo(g)</th><th class="tr">Qtd</th></tr></thead><tbody>${s.map(([k,v])=>`<tr><td><span class="badge ${TIPOS[k]?.badge||'bg-gold'}">${TIPOS[k]?.label||k}</span></td><td class="tr tg">${v.c.toFixed(4)}</td><td class="tr">${v.n}</td></tr>`).join('')}</tbody></table>`; };
-  const rC=(obj)=>{ const s=Object.entries(obj).sort((a,b)=>b[1].c-a[1].c); if(!s.length) return '<div class="nd">Sem dados de flash.</div>'; return `<table style="width:100%;font-size:12px"><thead><tr><th>Cor</th><th class="tr">Consumo(g)</th><th class="tr">Qtd</th></tr></thead><tbody>${s.map(([k,v])=>`<tr><td>${k}</td><td class="tr tg">${v.c.toFixed(4)}</td><td class="tr">${v.n}</td></tr>`).join('')}</tbody></table>`; };
+  /* ── POR TIPO ── */
+  const byTipo={};
+  lan.forEach(l=>{ const tl=l.tipo_lancamento||'flash', c=parseFloat(l.consumo_calc||0), p=parseFloat(l.peso_g||0); if(!byTipo[tl]) byTipo[tl]={c:0,p:0,n:0}; byTipo[tl].c+=c; byTipo[tl].p+=p; byTipo[tl].n++; });
+
+  /* ── POR COR (flash) ── */
+  const byCor={};
+  lanO.filter(l=>l.tipo_lancamento==='flash').forEach(l=>{
+    const c=parseFloat(l.consumo_calc||0), p=parseFloat(l.peso_g||0);
+    if(!byCor[l.cor]) byCor[l.cor]={c:0,p:0,n:0};
+    byCor[l.cor].c+=c; byCor[l.cor].p+=p; byCor[l.cor].n++;
+  });
+
+  /* ── POR COR — PESO BANHADO (todos os flash) ── */
+  const byCorPeso={};
+  lanO.filter(l=>l.tipo_lancamento==='flash'&&parseFloat(l.peso_g||0)>0).forEach(l=>{
+    const p=parseFloat(l.peso_g||0), c=parseFloat(l.consumo_calc||0);
+    if(!byCorPeso[l.cor]) byCorPeso[l.cor]={p:0,c:0,n:0};
+    byCorPeso[l.cor].p+=p; byCorPeso[l.cor].c+=c; byCorPeso[l.cor].n++;
+  });
+
+  /* ── POR CAMADA ── */
+  const byCam={};
+  lanO.filter(l=>l.camada&&l.camada!=='—').forEach(l=>{
+    const c=parseFloat(l.consumo_calc||0), p=parseFloat(l.peso_g||0);
+    const key=l.camada;
+    if(!byCam[key]) byCam[key]={c:0,p:0,n:0,cor:new Set()};
+    byCam[key].c+=c; byCam[key].p+=p; byCam[key].n++;
+    if(l.cor&&l.cor!=='—') byCam[key].cor.add(l.cor);
+  });
+
+  /* ── POR COR × CAMADA (flash) — tabela cruzada ── */
+  const corCam={};
+  lanO.filter(l=>l.tipo_lancamento==='flash'&&l.cor&&l.camada&&l.camada!=='—').forEach(l=>{
+    const k=l.cor+'|||'+l.camada, c=parseFloat(l.consumo_calc||0), p=parseFloat(l.peso_g||0);
+    if(!corCam[k]) corCam[k]={cor:l.cor,cam:l.camada,c:0,p:0,n:0};
+    corCam[k].c+=c; corCam[k].p+=p; corCam[k].n++;
+  });
+
+  /* ── POR DIA ── */
+  const byDia={};
+  lan.forEach(l=>{ const d=l.datetime_lancamento?.split('T')[0]; if(!d) return; if(!byDia[d]) byDia[d]={o:0,p:0,pesoO:0,pesoP:0,n:0}; const c=parseFloat(l.consumo_calc||0),pg=parseFloat(l.peso_g||0); if(l.metal==='Ouro'){byDia[d].o+=c;byDia[d].pesoO+=pg;}else{byDia[d].p+=c;byDia[d].pesoP+=pg;} byDia[d].n++; });
+  const diasL=Object.entries(byDia).sort((a,b)=>b[0].localeCompare(a[0]));
+
+  /* ── POR TIPO DE PEÇA (flash) ── */
+  const byPeca={};
+  lanO.filter(l=>l.tipo_lancamento==='flash'&&l.tipo_peca).forEach(l=>{
+    const c=parseFloat(l.consumo_calc||0), p=parseFloat(l.peso_g||0);
+    if(!byPeca[l.tipo_peca]) byPeca[l.tipo_peca]={c:0,p:0,n:0};
+    byPeca[l.tipo_peca].c+=c; byPeca[l.tipo_peca].p+=p; byPeca[l.tipo_peca].n++;
+  });
+
+  /* ── HELPERS DE RENDER ── */
+  const bar=(v,mx,cor='var(--gold)')=>`<div style="background:var(--border);border-radius:3px;height:5px;flex:1;overflow:hidden"><div style="height:100%;border-radius:3px;background:${cor};width:${mx>0?(v/mx*100).toFixed(1):0}%"></div></div>`;
+
+  const tblCor=()=>{
+    const s=Object.entries(byCor).sort((a,b)=>b[1].c-a[1].c); if(!s.length) return '<div class="nd">Sem dados de flash.</div>';
+    const mx=s[0][1].c;
+    return `<div class="tw"><table><thead><tr><th>Cor</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Lotes</th><th class="tr">g/kg banhado</th></tr></thead><tbody>
+    ${s.map(([k,v])=>`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:var(--gold);display:inline-block"></span><strong>${k}</strong></div></td>
+      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx)}<strong class="tg">${v.c.toFixed(4)} g</strong></div></td>
+      <td class="tr">${v.n}</td>
+      <td class="tr" style="color:var(--text3)">${v.p>0?(v.c/v.p*1000).toFixed(4)+' g/kg':'—'}</td>
+    </tr>`).join('')}
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${(tPesoO/1000).toFixed(3)} kg</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.tipo_lancamento==='flash').length}</td><td class="tr" style="color:var(--text3)">${tPesoO>0?(tO/tPesoO*1000).toFixed(4)+' g/kg':'—'}</td></tr>
+    </tbody></table></div>`;
+  };
+
+  const tblCam=()=>{
+    const s=Object.entries(byCam).sort((a,b)=>b[1].c-a[1].c); if(!s.length) return '<div class="nd">Sem dados com camada.</div>';
+    const mx=s[0][1].c;
+    return `<div class="tw"><table><thead><tr><th>Camada</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Lotes</th><th>Cores usadas</th></tr></thead><tbody>
+    ${s.map(([k,v])=>`<tr>
+      <td><strong style="font-family:monospace;color:var(--gold-dark)">${k}</strong></td>
+      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx)}<strong class="tg">${v.c.toFixed(4)} g</strong></div></td>
+      <td class="tr">${v.n}</td>
+      <td style="font-size:11px;color:var(--text3)">${[...v.cor].join(', ')||'—'}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+  };
+
+  const tblCorCam=()=>{
+    const s=Object.values(corCam).sort((a,b)=>b.c-a.c); if(!s.length) return '<div class="nd">Sem dados.</div>';
+    const mx=s[0].c;
+    return `<div class="tw"><table><thead><tr><th>Cor</th><th>Camada</th><th class="tr">Peso Banhado</th><th class="tr">Consumo(g)</th><th class="tr">Lotes</th></tr></thead><tbody>
+    ${s.map(v=>`<tr>
+      <td>${v.cor}</td>
+      <td><span style="font-family:monospace;font-size:11px;color:var(--gold-dark)">${v.cam}</span></td>
+      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx)}<strong class="tg">${v.c.toFixed(4)} g</strong></div></td>
+      <td class="tr">${v.n}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+  };
+
+  const tblPeca=()=>{
+    const s=Object.entries(byPeca).sort((a,b)=>b[1].p-a[1].p); if(!s.length) return '<div class="nd">Sem dados.</div>';
+    const mx=s[0][1].p;
+    return `<div class="tw"><table><thead><tr><th>Tipo de Peça</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Lotes</th></tr></thead><tbody>
+    ${s.map(([k,v])=>`<tr>
+      <td><strong>${k}</strong></td>
+      <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.p,mx,'var(--blue)')}<strong>${(v.p/1000).toFixed(3)} kg</strong></div></td>
+      <td class="tr tg">${v.c.toFixed(4)} g</td>
+      <td class="tr">${v.n}</td>
+    </tr>`).join('')}
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${(tPesoO/1000).toFixed(3)} kg</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.tipo_lancamento==='flash').length}</td></tr>
+    </tbody></table></div>`;
+  };
+
+  const tblTipo=()=>{
+    const s=Object.entries(byTipo).sort((a,b)=>b[1].c-a[1].c); if(!s.length) return '<div class="nd">Sem dados.</div>';
+    const mx=s[0][1].c;
+    return `<div class="tw"><table><thead><tr><th>Tipo</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Metal</th><th class="tr">Lotes</th></tr></thead><tbody>
+    ${s.map(([k,v])=>`<tr>
+      <td><span class="badge ${TIPOS[k]?.badge||'bg-gold'}">${TIPOS[k]?.label||k}</span></td>
+      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx)}<strong class="tg">${v.c.toFixed(4)} g</strong></div></td>
+      <td class="tr">${v.n}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+  };
+
+  const tblDia=()=>{
+    if(!diasL.length) return '<div class="nd">Sem dados.</div>';
+    const mxO=Math.max(...diasL.map(([,v])=>v.o),.001);
+    return `<div class="tw"><table><thead><tr><th>Data</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Consumo Prata</th><th class="tr">Total Metal</th><th class="tr">Lotes</th></tr></thead><tbody>
+    ${diasL.map(([d,v])=>`<tr>
+      <td><strong>${fmtDate(d)}</strong></td>
+      <td class="tr">${(v.pesoO+v.pesoP)>0?((v.pesoO+v.pesoP)/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr"><div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">${bar(v.o,mxO)}<span class="tg">${v.o>0?v.o.toFixed(4):'—'}</span></div></td>
+      <td class="tr ts">${v.p>0?v.p.toFixed(4):'—'}</td>
+      <td class="tr" style="font-weight:700">${(v.o+v.p).toFixed(4)} g</td>
+      <td class="tr">${v.n}</td>
+    </tr>`).join('')}
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc">
+      <td>TOTAL</td>
+      <td class="tr">${((tPesoO+tPesoP)/1000).toFixed(3)} kg</td>
+      <td class="tr tg">${tO.toFixed(4)} g</td>
+      <td class="tr ts">${tP.toFixed(4)} g</td>
+      <td class="tr">${(tO+tP).toFixed(4)} g</td>
+      <td class="tr">${lan.length}</td>
+    </tr>
+    </tbody></table></div>`;
+  };
 
   el.innerHTML=`
-  <div class="card"><div class="ct">📊 Resumo — ${ini||'—'} a ${fim||'—'}</div>
+  <!-- CARDS RESUMO -->
+  <div class="card">
+    <div class="ct">📊 Resumo Geral — ${ini?fmtDate(ini):'início'} a ${fim?fmtDate(fim):'hoje'}</div>
     <div class="grid">
-      <div class="stat s-g"><div class="slbl">Consumo Ouro</div><div class="sval vg">${tO.toFixed(4)} g</div><div class="ssub">${lan.filter(l=>l.metal==='Ouro').length} lançamentos</div></div>
-      <div class="stat s-s"><div class="slbl">Consumo Prata</div><div class="sval vs">${tP.toFixed(4)} g</div><div class="ssub">${lan.filter(l=>l.metal==='Prata').length} lançamentos</div></div>
+      <div class="stat s-g"><div class="slbl">Consumo Ouro</div><div class="sval vg">${tO.toFixed(4)} g</div><div class="ssub">${lanO.length} lançamentos</div></div>
+      <div class="stat s-s"><div class="slbl">Consumo Prata</div><div class="sval vs">${tP.toFixed(4)} g</div><div class="ssub">${lanP.length} lançamentos</div></div>
+      <div class="stat s-b"><div class="slbl">Peso Banhado Ouro</div><div class="sval">${(tPesoO/1000).toFixed(3)} kg</div><div class="ssub">${tPesoO.toFixed(0)} g</div></div>
+      <div class="stat s-b"><div class="slbl">Peso Banhado Prata</div><div class="sval">${(tPesoP/1000).toFixed(3)} kg</div><div class="ssub">${tPesoP.toFixed(0)} g</div></div>
       <div class="stat s-g"><div class="slbl">Compras Ouro</div><div class="sval">${tCompO.toFixed(3)} g</div><div class="ssub">${tValO>0?'R$ '+tValO.toFixed(2):'sem valor'}</div></div>
       <div class="stat s-s"><div class="slbl">Compras Prata</div><div class="sval">${tCompP.toFixed(3)} g</div><div class="ssub">${tValP>0?'R$ '+tValP.toFixed(2):'sem valor'}</div></div>
-      <div class="stat s-gr"><div class="slbl">Estoque Ouro</div><div class="sval ${eO.est<0?'vr':'vg'}">${eO.est.toFixed(4)} g</div></div>
-      <div class="stat s-${eP.est<0?'r':'s'}"><div class="slbl">Estoque Prata</div><div class="sval ${eP.est<0?'vr':'vs'}">${eP.est.toFixed(4)} g</div></div>
-      <div class="stat s-p"><div class="slbl">Total Lançamentos</div><div class="sval">${lan.length}</div></div>
-      ${tValO>0&&tO>0?`<div class="stat s-o"><div class="slbl">Custo Médio Ouro</div><div class="sval">R$ ${(tValO/tCompO).toFixed(2)}/g</div></div>`:''}
+      <div class="stat s-gr"><div class="slbl">Estoque Ouro</div><div class="sval ${eO.est<0?'vr':'vg'}">${eO.est.toFixed(4)} g</div><div class="ssub">${eO.est<0?'⚠️ Negativo':'Disponível'}</div></div>
+      <div class="stat s-${eP.est<0?'r':'s'}"><div class="slbl">Estoque Prata</div><div class="sval ${eP.est<0?'vr':'vs'}">${eP.est.toFixed(4)} g</div><div class="ssub">${eP.est<0?'⚠️ Negativo':'Disponível'}</div></div>
+      ${tValO>0&&tCompO>0?`<div class="stat s-o"><div class="slbl">Custo Médio Ouro</div><div class="sval">R$ ${(tValO/tCompO).toFixed(2)}/g</div></div>`:''}
+      ${tPesoO>0?`<div class="stat s-o"><div class="slbl">Rendimento Ouro</div><div class="sval">${(tO/tPesoO*1000).toFixed(4)}</div><div class="ssub">g ouro / kg banhado</div></div>`:''}
+      <div class="stat s-p"><div class="slbl">Total Lançamentos</div><div class="sval">${lan.length}</div><div class="ssub">${diasL.length} dias</div></div>
+      ${diasL.length>0?`<div class="stat s-p"><div class="slbl">Média Diária Ouro</div><div class="sval">${(tO/diasL.length).toFixed(4)} g</div><div class="ssub">por dia</div></div>`:''}
     </div>
   </div>
-  <div class="two">
-    <div class="card"><div class="ct">📦 Por Tipo de Lançamento</div>${rT(byTipo)}</div>
-    <div class="card"><div class="ct">🎨 Flash — Por Cor</div>${rC(byCor)}</div>
+
+  <!-- POR COR — PRINCIPAL -->
+  <div class="card">
+    <div class="ct">🎨 Flash — Por Cor (Consumo × Peso Banhado)</div>
+    ${tblCor()}
   </div>
-  ${diasL.length?`<div class="card"><div class="ct">📅 Consumo por Dia</div><div class="tw"><table><thead><tr><th>Data</th><th class="tr">Ouro(g)</th><th class="tr">Prata(g)</th><th class="tr">Total(g)</th><th class="tr">Lotes</th></tr></thead><tbody>${diasL.map(([d,v])=>`<tr><td>${fmtDate(d)}</td><td class="tr tg">${v.o>0?v.o.toFixed(4):'—'}</td><td class="tr ts">${v.p>0?v.p.toFixed(4):'—'}</td><td class="tr" style="font-weight:700">${(v.o+v.p).toFixed(4)}</td><td class="tr">${v.n}</td></tr>`).join('')}</tbody></table></div></div>`:''}
-  ${comps.length?`<div class="card"><div class="ct">🛒 Compras no Período</div><div class="tw"><table><thead><tr><th>Data</th><th>Metal</th><th>Fornecedor</th><th class="tr">Qtd(g)</th><th class="tr">R$/g</th><th class="tr">Total R$</th></tr></thead><tbody>${comps.map(c=>{ const q=parseFloat(c.qtd_g||0),v=parseFloat(c.valor_rs||0); return `<tr><td>${fmtDate(c.data)}</td><td><span class="badge ${c.metal==='Ouro'?'bg-gold':'bg-silver'}">${c.metal}</span></td><td>${c.fornecedor||'—'}</td><td class="tr">${q.toFixed(3)}</td><td class="tr">${v>0&&q>0?'R$ '+(v/q).toFixed(2):'—'}</td><td class="tr">${v>0?'R$ '+v.toFixed(2):'—'}</td></tr>`; }).join('')}</tbody></table></div></div>`:''}`;
+
+  <!-- POR COR × CAMADA -->
+  <div class="card">
+    <div class="ct">🎨 Flash — Cor × Camada (combinações usadas)</div>
+    ${tblCorCam()}
+  </div>
+
+  <!-- POR CAMADA -->
+  <div class="card">
+    <div class="ct">🔩 Por Camada Utilizada</div>
+    ${tblCam()}
+  </div>
+
+  <!-- POR TIPO DE PEÇA -->
+  ${Object.keys(byPeca).length?`<div class="card"><div class="ct">💎 Por Tipo de Peça</div>${tblPeca()}</div>`:''}
+
+  <!-- POR TIPO DE LANÇAMENTO -->
+  <div class="card">
+    <div class="ct">📦 Por Tipo de Lançamento</div>
+    ${tblTipo()}
+  </div>
+
+  <!-- POR DIA -->
+  <div class="card">
+    <div class="ct">📅 Consumo por Dia</div>
+    ${tblDia()}
+  </div>
+
+  <!-- COMPRAS -->
+  ${comps.length?`<div class="card"><div class="ct">🛒 Compras no Período</div>
+    <div class="tw"><table><thead><tr><th>Data</th><th>Metal</th><th>Fornecedor</th><th class="tr">Qtd(g)</th><th class="tr">R$/g</th><th class="tr">Total R$</th></tr></thead><tbody>
+    ${comps.map(c=>{ const q=parseFloat(c.qtd_g||0),v=parseFloat(c.valor_rs||0); return `<tr><td>${fmtDate(c.data)}</td><td><span class="badge ${c.metal==='Ouro'?'bg-gold':'bg-silver'}">${c.metal}</span></td><td>${c.fornecedor||'—'}</td><td class="tr">${q.toFixed(3)}</td><td class="tr">${v>0&&q>0?'R$ '+(v/q).toFixed(2):'—'}</td><td class="tr">${v>0?'R$ '+v.toFixed(2):'—'}</td></tr>`; }).join('')}
+    </tbody></table></div>
+  </div>`:''}`;
 }
 
 function expCSV() {
