@@ -332,8 +332,8 @@ td{padding:8px 12px;vertical-align:middle}
           <div class="lf w160"><label>💎 Tipo de Peça</label><select id="fl-tipo"></select></div>
           <div class="lf"><label>🎨 Cor</label><select id="fl-cor" onchange="calcFlash()"></select></div>
           <div class="lf w130"><label>🔩 Camada (ex: 0.00030)</label><input type="number" id="fl-cam" step="0.00001" placeholder="0.00000" oninput="calcFlash()"></div>
-          <div class="lf w110"><label>⚖️ Peso</label><input type="number" id="fl-peso" step="0.001" placeholder="0.000" oninput="calcFlash()"></div>
-          <div class="lf w90"><label>Unidade</label><select id="fl-un" onchange="calcFlash()"><option value="g">g</option><option value="kg">kg</option></select></div>
+          <div class="lf w110"><label>⚖️ Peso (kg)</label><input type="number" id="fl-peso" step="0.001" placeholder="0.000" oninput="calcFlash()"></div>
+          <div class="lf w90"><label>Unidade</label><select id="fl-un" onchange="calcFlash()"><option value="kg">kg</option><option value="g">g</option></select></div>
           <div class="lf wflex"><label>Obs</label><input type="text" id="fl-obs" placeholder="Opcional..."></div>
         </div>
         <div class="prev" id="prev-flash"><span>Preencha peso e camada ▶</span></div>
@@ -345,8 +345,8 @@ td{padding:8px 12px;vertical-align:middle}
         <div class="lrow">
           <div class="lf w110"><label>📅 Data</label><input type="date" id="fo-data"></div>
           <div class="lf w130"><label>🔩 Camada (ex: 0.002)</label><input type="number" id="fo-cam" step="0.00001" placeholder="0.00000" oninput="calcFolheacao()"></div>
-          <div class="lf w110"><label>⚖️ Peso</label><input type="number" id="fo-peso" step="0.001" placeholder="0.000" oninput="calcFolheacao()"></div>
-          <div class="lf w90"><label>Unidade</label><select id="fo-un" onchange="calcFolheacao()"><option value="g">g</option><option value="kg">kg</option></select></div>
+          <div class="lf w110"><label>⚖️ Peso (kg)</label><input type="number" id="fo-peso" step="0.001" placeholder="0.000" oninput="calcFolheacao()"></div>
+          <div class="lf w90"><label>Unidade</label><select id="fo-un" onchange="calcFolheacao()"><option value="kg">kg</option><option value="g">g</option></select></div>
           <div class="lf wflex"><label>Obs</label><input type="text" id="fo-obs" placeholder="Opcional..."></div>
         </div>
         <div class="prev" id="prev-folheacao"><span>Preencha peso e camada ▶</span></div>
@@ -358,8 +358,8 @@ td{padding:8px 12px;vertical-align:middle}
         <div class="lrow">
           <div class="lf w110"><label>📅 Data</label><input type="date" id="po-data"></div>
           <div class="lf w130"><label>🔩 Camada (ex: 0.00030)</label><input type="number" id="po-cam" step="0.00001" placeholder="0.00000" oninput="calcPreOuro()"></div>
-          <div class="lf w110"><label>⚖️ Peso</label><input type="number" id="po-peso" step="0.001" placeholder="0.000" oninput="calcPreOuro()"></div>
-          <div class="lf w90"><label>Unidade</label><select id="po-un" onchange="calcPreOuro()"><option value="g">g</option><option value="kg">kg</option></select></div>
+          <div class="lf w110"><label>⚖️ Peso (kg)</label><input type="number" id="po-peso" step="0.001" placeholder="0.000" oninput="calcPreOuro()"></div>
+          <div class="lf w90"><label>Unidade</label><select id="po-un" onchange="calcPreOuro()"><option value="kg">kg</option><option value="g">g</option></select></div>
           <div class="lf wflex"><label>Obs</label><input type="text" id="po-obs" placeholder="Opcional..."></div>
         </div>
         <div class="prev" id="prev-pre_ouro"><span>Preencha peso e camada ▶</span></div>
@@ -404,8 +404,8 @@ td{padding:8px 12px;vertical-align:middle}
         <div class="lrow">
           <div class="lf w110"><label>📅 Data</label><input type="date" id="pr-data"></div>
           <div class="lf w130"><label>🔩 Camada (ex: 0.010)</label><input type="number" id="pr-cam" step="0.00001" placeholder="0.00000" oninput="calcPrata()"></div>
-          <div class="lf w110"><label>⚖️ Peso</label><input type="number" id="pr-peso" step="0.001" placeholder="0.000" oninput="calcPrata()"></div>
-          <div class="lf w90"><label>Unidade</label><select id="pr-un" onchange="calcPrata()"><option value="g">g</option><option value="kg">kg</option></select></div>
+          <div class="lf w110"><label>⚖️ Peso (kg)</label><input type="number" id="pr-peso" step="0.001" placeholder="0.000" oninput="calcPrata()"></div>
+          <div class="lf w90"><label>Unidade</label><select id="pr-un" onchange="calcPrata()"><option value="kg">kg</option><option value="g">g</option></select></div>
           <div class="lf wflex"><label>Obs</label><input type="text" id="pr-obs" placeholder="Opcional..."></div>
         </div>
         <div class="prev" id="prev-prata"><span>Preencha peso e camada ▶</span></div>
@@ -452,7 +452,7 @@ td{padding:8px 12px;vertical-align:middle}
     </div>
     <div class="tw">
       <table>
-        <thead><tr><th>Data</th><th>Tipo</th><th>Metal</th><th>Detalhes</th><th class="tr">Peso(g)</th><th class="tr">Consumo(g)</th><th>Obs</th><th>Ações</th></tr></thead>
+        <thead><tr><th>Data</th><th>Tipo</th><th>Metal</th><th>Detalhes</th><th class="tr">Peso</th><th class="tr">Consumo (g)</th><th>Obs</th><th>Ações</th></tr></thead>
         <tbody id="tb-lan"></tbody>
       </table>
     </div>
@@ -508,7 +508,7 @@ td{padding:8px 12px;vertical-align:middle}
   </div>
   <div class="tw mt12">
     <table>
-      <thead><tr><th>Data</th><th>Metal</th><th>Fornecedor</th><th class="tr">Qtd(g)</th><th class="tr">R$/g</th><th class="tr">Total R$</th><th>Obs</th><th>Ações</th></tr></thead>
+      <thead><tr><th>Data</th><th>Metal</th><th>Fornecedor</th><th class="tr">Qtd (g)</th><th class="tr">R$/g</th><th class="tr">Total R$</th><th>Obs</th><th>Ações</th></tr></thead>
       <tbody id="tb-comp"></tbody>
     </table>
   </div>
@@ -553,7 +553,7 @@ td{padding:8px 12px;vertical-align:middle}
     <div class="ct">📋 Movimentações do Mês</div>
     <div class="tw">
       <table>
-        <thead><tr><th>Data</th><th>Metal</th><th>Tipo</th><th class="tr">Entrada(g)</th><th class="tr">Saída(g)</th><th>Obs</th></tr></thead>
+        <thead><tr><th>Data</th><th>Metal</th><th>Tipo</th><th class="tr">Entrada (g)</th><th class="tr">Saída (g)</th><th>Obs</th></tr></thead>
         <tbody id="tb-mov"></tbody>
       </table>
     </div>
@@ -727,7 +727,7 @@ const TIPOS = {
 
 function getMes() { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
 function hoje() { return new Date().toISOString().split('T')[0]; }
-function pg2g(p,u) { return u==='kg'?p*1000:p; }
+function pesoToKg(p,u) { return u==='g'?p/1000:p; }
 
 /* ============================================================
    INIT
@@ -746,6 +746,7 @@ async function init() {
     setSt('ok','✓ Online');
     populateSels();
     setDatas();
+    ['fl-un','fo-un','po-un','pr-un'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value='kg'; });
     populateMesSel();
     renderLan();
     renderDashboard();
@@ -851,15 +852,15 @@ function populateMesSel() {
 
 /* ============================================================
    CÁLCULOS
-   Fórmula: Peso(g) × camada = consumo(g)
+   Fórmula: Peso (kg) × camada = consumo(g)
    Ex: 1000g × 0.00030 = 0.30g ✓
 ============================================================ */
 function calcShow(peso, un, cam, prevId, metal) {
-  const pg=pg2g(peso,un), c=parseFloat(cam)||0, cons=pg*c;
+  const kg=pesoToKg(peso,un), c=parseFloat(cam)||0, cons=kg*c;
   const prev=document.getElementById(prevId); if(!prev) return cons;
-  if(pg>0&&c>0) {
+  if(kg>0&&c>0) {
     const cor=metal==='Prata'?'#9ab0c9':'var(--gold)';
-    prev.innerHTML=`<span>${pg.toLocaleString('pt-BR',{maximumFractionDigits:3})} g × ${c} =</span> <strong style="color:${cor}">${cons.toFixed(4)} g</strong> <span style="opacity:.5;font-size:11px">${metal}</span>`;
+    prev.innerHTML=`<span>${kg.toLocaleString('pt-BR',{maximumFractionDigits:3})} kg × ${c} =</span> <strong style="color:${cor}">${cons.toFixed(4)} g</strong> <span style="opacity:.5;font-size:11px">${metal}</span>`;
   } else {
     prev.innerHTML='<span>Preencha peso e camada ▶</span>';
   }
@@ -885,17 +886,17 @@ async function salvarLan() {
   let payload=null;
 
   if(t==='flash') {
-    const pg=pg2g(parseFloat(document.getElementById('fl-peso').value)||0, document.getElementById('fl-un').value);
+    const pg=pesoToKg(parseFloat(document.getElementById('fl-peso').value)||0, document.getElementById('fl-un').value);
     const cam=parseFloat(document.getElementById('fl-cam').value)||0;
     if(!pg||!cam) { toast('Informe peso e camada.','error'); return; }
     payload={metal:'Ouro',tipo_peca:document.getElementById('fl-tipo').value,peso_g:pg,cor:document.getElementById('fl-cor').value,camada:cam.toString(),consumo_calc:pg*cam,obs:document.getElementById('fl-obs').value||null,datetime_lancamento:document.getElementById('fl-data').value+'T00:00:00'};
   } else if(t==='folheacao') {
-    const pg=pg2g(parseFloat(document.getElementById('fo-peso').value)||0, document.getElementById('fo-un').value);
+    const pg=pesoToKg(parseFloat(document.getElementById('fo-peso').value)||0, document.getElementById('fo-un').value);
     const cam=parseFloat(document.getElementById('fo-cam').value)||0;
     if(!pg||!cam) { toast('Informe peso e camada.','error'); return; }
     payload={metal:'Ouro',tipo_peca:'Folheação',peso_g:pg,cor:'—',camada:cam.toString(),consumo_calc:pg*cam,obs:document.getElementById('fo-obs').value||null,datetime_lancamento:document.getElementById('fo-data').value+'T00:00:00'};
   } else if(t==='pre_ouro') {
-    const pg=pg2g(parseFloat(document.getElementById('po-peso').value)||0, document.getElementById('po-un').value);
+    const pg=pesoToKg(parseFloat(document.getElementById('po-peso').value)||0, document.getElementById('po-un').value);
     const cam=parseFloat(document.getElementById('po-cam').value)||0;
     if(!pg||!cam) { toast('Informe peso e camada.','error'); return; }
     payload={metal:'Ouro',tipo_peca:'Pré-Ouro',peso_g:pg,cor:'—',camada:cam.toString(),consumo_calc:pg*cam,obs:document.getElementById('po-obs').value||null,datetime_lancamento:document.getElementById('po-data').value+'T00:00:00'};
@@ -912,7 +913,7 @@ async function salvarLan() {
     if(!q) { toast('Informe a quantidade de ouro.','error'); return; }
     payload={metal:'Ouro',tipo_peca:'Montagem de Cor',peso_g:0,cor:document.getElementById('mc-cor').value,camada:'—',consumo_calc:q,obs:document.getElementById('mc-obs').value||null,datetime_lancamento:document.getElementById('mc-data').value+'T00:00:00'};
   } else if(t==='prata') {
-    const pg=pg2g(parseFloat(document.getElementById('pr-peso').value)||0, document.getElementById('pr-un').value);
+    const pg=pesoToKg(parseFloat(document.getElementById('pr-peso').value)||0, document.getElementById('pr-un').value);
     const cam=parseFloat(document.getElementById('pr-cam').value)||0;
     if(!pg||!cam) { toast('Informe peso e camada.','error'); return; }
     payload={metal:'Prata',tipo_peca:'Prata',peso_g:pg,cor:'—',camada:cam.toString(),consumo_calc:pg*cam,obs:document.getElementById('pr-obs').value||null,datetime_lancamento:document.getElementById('pr-data').value+'T00:00:00'};
@@ -1028,7 +1029,7 @@ function renderLan() {
     else if(tl==='montagem_cor') det=`Cor: <strong>${l.cor}</strong>`;
     else det=ti.label;
     const camStr=(l.camada&&l.camada!=='—')?`<span style="color:var(--text3);font-size:11px"> cam:${l.camada}</span>`:'';
-    const pesoStr=parseFloat(l.peso_g||0)>0?parseFloat(l.peso_g).toFixed(3):'—';
+    const pesoStr=parseFloat(l.peso_g||0)>0?fmtPeso(parseFloat(l.peso_g||0)):'—';
     return `<tr style="${l.fechado?'opacity:.5':''}">
       <td style="white-space:nowrap">${fmtDate(dt)}${l.fechado?' <span class="badge bg-red" style="font-size:9px">FEC</span>':''}</td>
       <td><span class="badge ${ti.badge}">${ti.label}</span></td>
@@ -1279,61 +1280,57 @@ async function gerarRel() {
   const el=document.getElementById('rel-out'); if(!el) return;
   el.innerHTML='<div class="nd">⏳ Carregando relatório...</div>';
 
-  // Filtros de data para as views
-  const qData=(col)=>{
-    let q='';
-    if(ini) q+=`&${col}=gte.${ini}`;
-    if(fim) q+=`&${col}=lte.${fim}`;
-    return q;
-  };
-  const qMetal=fm?`&metal=eq.${fm}`:'';
-
   try {
-    // Busca tudo em paralelo direto das views do Supabase
-    const [byCor, byCamO, byCamP, byTipo, byCorCam, byPeca, byDia, estoque, compras] = await Promise.all([
-      db.get('v_relatorio_por_cor', `?order=consumo_ouro_g.desc${qData('mes_key').replace(/&dia=gte/,'&dia=gte').replace('mes_key=gte','mes_key=gte')}`),
-      db.get('v_relatorio_camada_ouro', `?order=consumo_ouro_g.desc`),
-      db.get('v_relatorio_camada_prata', `?order=consumo_prata_g.desc`),
-      db.get('v_relatorio_por_tipo', `?order=consumo_g.desc`),
-      db.get('v_relatorio_cor_camada', `?order=consumo_ouro_g.desc`),
-      db.get('v_relatorio_por_peca', `?order=peso_total_g.desc`),
-      db.get('v_relatorio_por_dia', `?order=dia.desc`),
-      db.get('v_estoque_mes', `?mes_key=eq.${getMes()}`),
-      db.get('metais_compras', `?order=data.desc${qData('data')}`)
-    ]);
+    const lanPeriodo = LAN.filter(l=>{
+      const d=(l.datetime_lancamento||'').substring(0,10);
+      return (!ini || d>=ini) && (!fim || d<=fim) && (!fm || l.metal===fm);
+    });
+    const comprasPeriodo = COMP.filter(c=>{
+      const d=(c.data||'').substring(0,10);
+      return (!ini || d>=ini) && (!fim || d<=fim) && (!fm || c.metal===fm);
+    });
 
-    // Filtra por data nas views (views retornam tudo, filtramos no JS por enquanto)
-    const filtDia=(rows, col='dia')=>rows.filter(r=>{ const d=(r[col]||'').substring(0,10); return(!ini||d>=ini)&&(!fim||d<=fim); });
-    const filtMes=(rows)=>rows.filter(r=>{ const mk=r.mes_key||''; return(!ini||mk+'01'>=ini.substring(0,7)+'01')&&(!fim||mk+'01'<=fim.substring(0,7)+'01'); });
+    const groupBy = (rows, keyFn, initFn, addFn)=>{
+      const map = new Map();
+      rows.forEach(r=>{
+        const key = keyFn(r);
+        if(!map.has(key)) map.set(key, initFn(r));
+        addFn(map.get(key), r);
+      });
+      return [...map.values()];
+    };
 
-    const fCor=filtMes(byCor).filter(r=>!fm||r.metal===fm||fm==='Ouro');
-    const fCamO=filtMes(byCamO);
-    const fCamP=filtMes(byCamP);
-    const fTipo=filtMes(byTipo).filter(r=>!fm||r.metal===fm);
-    const fCorCam=filtMes(byCorCam);
-    const fPeca=filtMes(byPeca);
-    const fDia=filtDia(byDia);
-    const fComp=compras.filter(c=>(!ini||c.data>=ini)&&(!fim||c.data<=fim));
-    const est=estoque[0]||{};
+    const flash = lanPeriodo.filter(l=>l.tipo_lancamento==='flash');
+    const fCor = groupBy(flash, r=>r.cor||'—', r=>({cor:r.cor||'—', peso_total_g:0, consumo_ouro_g:0, lotes:0}), (a,r)=>{ a.peso_total_g += parseFloat(r.peso_g||0); a.consumo_ouro_g += parseFloat(r.consumo_calc||0); a.lotes += 1; }).sort((a,b)=>b.consumo_ouro_g-a.consumo_ouro_g);
+    const fCorCam = groupBy(flash, r=>`${r.cor||'—'}||${r.camada||'—'}`, r=>({cor:r.cor||'—', camada:r.camada||'—', peso_total_g:0, consumo_ouro_g:0, lotes:0}), (a,r)=>{ a.peso_total_g += parseFloat(r.peso_g||0); a.consumo_ouro_g += parseFloat(r.consumo_calc||0); a.lotes += 1; }).sort((a,b)=>b.consumo_ouro_g-a.consumo_ouro_g);
 
-    // Totais
-    const tO=fTipo.filter(r=>r.metal==='Ouro').reduce((s,r)=>s+parseFloat(r.consumo_g||0),0);
-    const tP=fTipo.filter(r=>r.metal==='Prata').reduce((s,r)=>s+parseFloat(r.consumo_g||0),0);
-    const tPesoO=fTipo.filter(r=>r.metal==='Ouro').reduce((s,r)=>s+parseFloat(r.peso_total_g||0),0);
-    const tPesoP=fTipo.filter(r=>r.metal==='Prata').reduce((s,r)=>s+parseFloat(r.peso_total_g||0),0);
-    const tCompO=fComp.filter(c=>c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
-    const tCompP=fComp.filter(c=>c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
-    const tValO=fComp.filter(c=>c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
-    const tValP=fComp.filter(c=>c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
-    const estO=parseFloat(est.ouro_inicial||0)+parseFloat(est.ouro_compras||0)+parseFloat(est.ouro_ajuste_pos||0)-parseFloat(est.ouro_ajuste_neg||0)-parseFloat(est.ouro_consumo||0);
-    const estP=parseFloat(est.prata_inicial||0)+parseFloat(est.prata_compras||0)+parseFloat(est.prata_ajuste_pos||0)-parseFloat(est.prata_ajuste_neg||0)-parseFloat(est.prata_consumo||0);
-    const nLotes=fTipo.reduce((s,r)=>s+parseInt(r.lotes||0),0);
+    const ouroCamRows = lanPeriodo.filter(l=>l.metal==='Ouro' && l.camada && l.camada!=='—' && parseFloat(l.peso_g||0)>0);
+    const fCamO = groupBy(ouroCamRows, r=>String(r.camada), r=>({camada:String(r.camada), peso_total_g:0, consumo_ouro_g:0, lotes:0, cores:new Set()}), (a,r)=>{ a.peso_total_g += parseFloat(r.peso_g||0); a.consumo_ouro_g += parseFloat(r.consumo_calc||0); a.lotes += 1; if(r.cor && r.cor!=='—') a.cores.add(r.cor); }).map(x=>({...x, cores_usadas:[...x.cores].join(', ')})).sort((a,b)=>b.consumo_ouro_g-a.consumo_ouro_g);
+
+    const prataCamRows = lanPeriodo.filter(l=>l.metal==='Prata' && l.camada && l.camada!=='—' && parseFloat(l.peso_g||0)>0);
+    const fCamP = groupBy(prataCamRows, r=>String(r.camada), r=>({camada:String(r.camada), peso_total_g:0, consumo_prata_g:0, lotes:0}), (a,r)=>{ a.peso_total_g += parseFloat(r.peso_g||0); a.consumo_prata_g += parseFloat(r.consumo_calc||0); a.lotes += 1; }).sort((a,b)=>b.consumo_prata_g-a.consumo_prata_g);
+
+    const fPeca = groupBy(flash, r=>r.tipo_peca||'—', r=>({tipo_peca:r.tipo_peca||'—', peso_total_g:0, consumo_ouro_g:0, lotes:0}), (a,r)=>{ a.peso_total_g += parseFloat(r.peso_g||0); a.consumo_ouro_g += parseFloat(r.consumo_calc||0); a.lotes += 1; }).sort((a,b)=>b.peso_total_g-a.peso_total_g);
+
+    const fTipo = groupBy(lanPeriodo, r=>r.tipo_lancamento||'flash', r=>({tipo_lancamento:r.tipo_lancamento||'flash', metal:r.metal||'Ouro', peso_total_g:0, consumo_g:0, lotes:0}), (a,r)=>{ a.peso_total_g += parseFloat(r.peso_g||0); a.consumo_g += parseFloat(r.consumo_calc||0); a.lotes += 1; }).sort((a,b)=>b.consumo_g-a.consumo_g);
+
+    const fDia = groupBy(lanPeriodo, r=>(r.datetime_lancamento||'').substring(0,10), r=>({dia:(r.datetime_lancamento||'').substring(0,10), peso_ouro_g:0, peso_prata_g:0, consumo_ouro_g:0, consumo_prata_g:0, lotes:0}), (a,r)=>{ const peso=parseFloat(r.peso_g||0), cons=parseFloat(r.consumo_calc||0); if(r.metal==='Prata'){ a.peso_prata_g += peso; a.consumo_prata_g += cons; } else { a.peso_ouro_g += peso; a.consumo_ouro_g += cons; } a.lotes += 1; }).sort((a,b)=>a.dia.localeCompare(b.dia));
+
+    const tO=fTipo.filter(r=>r.metal==='Ouro').reduce((s,r)=>s+r.consumo_g,0);
+    const tP=fTipo.filter(r=>r.metal==='Prata').reduce((s,r)=>s+r.consumo_g,0);
+    const tPesoO=fTipo.filter(r=>r.metal==='Ouro').reduce((s,r)=>s+r.peso_total_g,0);
+    const tPesoP=fTipo.filter(r=>r.metal==='Prata').reduce((s,r)=>s+r.peso_total_g,0);
+    const tCompO=comprasPeriodo.filter(c=>c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
+    const tCompP=comprasPeriodo.filter(c=>c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
+    const tValO=comprasPeriodo.filter(c=>c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
+    const tValP=comprasPeriodo.filter(c=>c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
+    const estO = calcEst('Ouro').est;
+    const estP = calcEst('Prata').est;
+    const nLotes=lanPeriodo.length;
     const nDias=fDia.length;
 
-    // Helper bar
     const bar=(v,mx,cor='var(--gold)')=>`<div style="background:var(--border);border-radius:3px;height:5px;flex:1;overflow:hidden"><div style="height:100%;border-radius:3px;background:${cor};width:${mx>0?(v/mx*100).toFixed(1):0}%"></div></div>`;
 
-    // Render tabelas
     const tblCor=()=>{
       if(!fCor.length) return '<div class="nd">Sem dados de flash.</div>';
       const mx=Math.max(...fCor.map(r=>parseFloat(r.consumo_ouro_g||0)));
@@ -1344,7 +1341,7 @@ async function gerarRel() {
         <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(parseFloat(r.consumo_ouro_g||0),mx)}<strong class="tg">${parseFloat(r.consumo_ouro_g||0).toFixed(4)} g</strong></div></td>
         <td class="tr">${r.lotes}</td>
       </tr>`).join('')}
-      <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${fmtPeso(tPesoO)}</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${fCor.reduce((s,r)=>s+parseInt(r.lotes||0),0)}</td></tr>
+      <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${fmtPeso(fCor.reduce((s,r)=>s+parseFloat(r.peso_total_g||0),0))}</td><td class="tr tg">${fCor.reduce((s,r)=>s+parseFloat(r.consumo_ouro_g||0),0).toFixed(4)} g</td><td class="tr">${fCor.reduce((s,r)=>s+parseInt(r.lotes||0),0)}</td></tr>
       </tbody></table></div>`;
     };
 
@@ -1411,7 +1408,7 @@ async function gerarRel() {
       return `<div class="tw"><table><thead><tr><th>Tipo</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Metal</th><th class="tr">Lotes</th></tr></thead><tbody>
       ${fTipo.map(r=>`<tr>
         <td><span class="badge ${TIPOS[r.tipo_lancamento]?.badge||'bg-gold'}">${TIPOS[r.tipo_lancamento]?.label||r.tipo_lancamento}</span></td>
-        <td class="tr">${fmtPeso(parseFloat(r.peso_total_g||0))}</td>
+        <td class="tr">${parseFloat(r.peso_total_g||0)>0?fmtPeso(parseFloat(r.peso_total_g||0)):'—'}</td>
         <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(parseFloat(r.consumo_g||0),mx)}<strong class="tg">${parseFloat(r.consumo_g||0).toFixed(4)} g</strong></div></td>
         <td class="tr">${r.lotes}</td>
       </tr>`).join('')}
@@ -1445,10 +1442,10 @@ async function gerarRel() {
     <div class="card">
       <div class="ct">📊 Resumo — ${ini?fmtDate(ini):'início'} a ${fim?fmtDate(fim):'hoje'}</div>
       <div class="grid">
-        <div class="stat s-g"><div class="slbl">Consumo Ouro</div><div class="sval vg">${tO.toFixed(4)} g</div><div class="ssub">${fTipo.filter(r=>r.metal==='Ouro').reduce((s,r)=>s+parseInt(r.lotes||0),0)} lançamentos</div></div>
-        <div class="stat s-s"><div class="slbl">Consumo Prata</div><div class="sval vs">${tP.toFixed(4)} g</div><div class="ssub">${fTipo.filter(r=>r.metal==='Prata').reduce((s,r)=>s+parseInt(r.lotes||0),0)} lançamentos</div></div>
-        <div class="stat s-b"><div class="slbl">Peso Banhado Ouro</div><div class="sval">${fmtPeso(tPesoO)}</div></div>
-        <div class="stat s-b"><div class="slbl">Peso Banhado Prata</div><div class="sval">${fmtPeso(tPesoP)}</div></div>
+        <div class="stat s-g"><div class="slbl">Consumo Ouro</div><div class="sval vg">${tO.toFixed(4)} g</div><div class="ssub">${lanPeriodo.filter(r=>r.metal==='Ouro').length} lançamentos</div></div>
+        <div class="stat s-s"><div class="slbl">Consumo Prata</div><div class="sval vs">${tP.toFixed(4)} g</div><div class="ssub">${lanPeriodo.filter(r=>r.metal==='Prata').length} lançamentos</div></div>
+        <div class="stat s-b"><div class="slbl">Peso Banhado Ouro (kg)</div><div class="sval">${fmtPeso(tPesoO)}</div></div>
+        <div class="stat s-b"><div class="slbl">Peso Banhado Prata (kg)</div><div class="sval">${fmtPeso(tPesoP)}</div></div>
         <div class="stat s-g"><div class="slbl">Compras Ouro</div><div class="sval">${tCompO.toFixed(3)} g</div><div class="ssub">${tValO>0?'R$ '+tValO.toFixed(2):'sem valor'}</div></div>
         <div class="stat s-s"><div class="slbl">Compras Prata</div><div class="sval">${tCompP.toFixed(3)} g</div><div class="ssub">${tValP>0?'R$ '+tValP.toFixed(2):'sem valor'}</div></div>
         <div class="stat s-gr"><div class="slbl">Estoque Ouro</div><div class="sval ${estO<0?'vr':'vg'}">${estO.toFixed(4)} g</div><div class="ssub">${estO<0?'⚠️ Negativo':'Disponível'}</div></div>
@@ -1465,9 +1462,9 @@ async function gerarRel() {
     ${fPeca.length?`<div class="card"><div class="ct">💎 Por Tipo de Peça</div>${tblPeca()}</div>`:''}
     <div class="card"><div class="ct">📦 Por Tipo de Lançamento</div>${tblTipo()}</div>
     <div class="card"><div class="ct">📅 Por Dia</div>${tblDia()}</div>
-    ${fComp.length?`<div class="card"><div class="ct">🛒 Compras no Período</div>
-      <div class="tw"><table><thead><tr><th>Data</th><th>Metal</th><th>Fornecedor</th><th class="tr">Qtd(g)</th><th class="tr">R$/g</th><th class="tr">Total R$</th></tr></thead><tbody>
-      ${fComp.map(c=>{ const q=parseFloat(c.qtd_g||0),v=parseFloat(c.valor_rs||0); return `<tr><td>${fmtDate(c.data)}</td><td><span class="badge ${c.metal==='Ouro'?'bg-gold':'bg-silver'}">${c.metal}</span></td><td>${c.fornecedor||'—'}</td><td class="tr">${q.toFixed(3)}</td><td class="tr">${v>0&&q>0?'R$ '+(v/q).toFixed(2):'—'}</td><td class="tr">${v>0?'R$ '+v.toFixed(2):'—'}</td></tr>`; }).join('')}
+    ${comprasPeriodo.length?`<div class="card"><div class="ct">🛒 Compras no Período</div>
+      <div class="tw"><table><thead><tr><th>Data</th><th>Metal</th><th>Fornecedor</th><th class="tr">Qtd (g)</th><th class="tr">R$/g</th><th class="tr">Total R$</th></tr></thead><tbody>
+      ${comprasPeriodo.map(c=>{ const q=parseFloat(c.qtd_g||0),v=parseFloat(c.valor_rs||0); return `<tr><td>${fmtDate(c.data)}</td><td><span class="badge ${c.metal==='Ouro'?'bg-gold':'bg-silver'}">${c.metal}</span></td><td>${c.fornecedor||'—'}</td><td class="tr">${q.toFixed(3)}</td><td class="tr">${v>0&&q>0?'R$ '+(v/q).toFixed(2):'—'}</td><td class="tr">${v>0?'R$ '+v.toFixed(2):'—'}</td></tr>`; }).join('')}
       </tbody></table></div></div>`:''}`;
 
   } catch(e) {
@@ -1479,14 +1476,14 @@ async function gerarRel() {
 function expCSV() {
   const {ini,fim}=getPerDates();
   let lan=LAN.filter(l=>{ const d=l.datetime_lancamento?.split('T')[0]; return(!ini||d>=ini)&&(!fim||d<=fim); });
-  const h=['Data','Tipo','Metal','Cor/Destino','Camada','Peso(g)','Consumo(g)','Mês','Obs'];
+  const h=['Data','Tipo','Metal','Cor/Destino','Camada','Peso (kg)','Consumo(g)','Mês','Obs'];
   const rows=lan.map(l=>[l.datetime_lancamento?.split('T')[0],TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,l.metal,l.cor,l.camada,l.peso_g||'',l.consumo_calc||'',l.mes_key,l.obs||'']);
   dlFile(`metais_${ini}_${fim}.csv`,[h,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'text/csv');
   toast('CSV exportado!');
 }
 
 function expCSVAll() {
-  const h=['Data','Tipo','Metal','Cor','Camada','Peso(g)','Consumo(g)','Mês','Obs'];
+  const h=['Data','Tipo','Metal','Cor','Camada','Peso (kg)','Consumo(g)','Mês','Obs'];
   const rows=LAN.map(l=>[l.datetime_lancamento?.split('T')[0],TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,l.metal,l.cor,l.camada,l.peso_g||'',l.consumo_calc||'',l.mes_key,l.obs||'']);
   dlFile(`metais_completo_${hoje()}.csv`,[h,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'text/csv');
   toast('CSV completo exportado!');
@@ -1607,18 +1604,11 @@ function checkAlerts() {
 ============================================================ */
 function fmtDate(d) { if(!d) return '—'; const [y,m,day]=d.substring(0,10).split('-'); return `${day}/${m}/${y}`; }
 function fmtMes(k) { if(!k) return '—'; const [y,m]=k.split('-'); return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(m)-1]+'/'+y; }
-// Peso: < 1000g → gramas (ex: 300.1 g), >= 1000g → kg sem zeros (ex: 1.5 kg, 2 kg)
-function fmtPeso(g) {
-  if(!g||g<=0) return '—';
-  if(g>=1000) {
-    const kg=g/1000;
-    // Remove zeros desnecessários: 1.500 → 1.5, 2.000 → 2
-    const s=kg.toFixed(3).replace(/\.?0+$/,'');
-    return s+' kg';
-  }
-  // Gramas: 1 casa decimal, sem zero desnecessário: 300.0 → 300 g, 300.1 → 300.1 g
-  const s=g.toFixed(1).replace(/\.0$/,'');
-  return s+' g';
+// Peso de banho sempre exibido em kg
+function fmtPeso(v) {
+  const n=parseFloat(v||0);
+  if(!n||n<=0) return '—';
+  return n.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:3})+' kg';
 }
 function dlFile(n,c,t) { const b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a'); a.href=u; a.download=n; a.click(); URL.revokeObjectURL(u); }
 function toast(msg,type='success') {
