@@ -1358,20 +1358,20 @@ function gerarRel() {
   });
 
   /* ── HELPERS DE RENDER ── */
-  const bar=(v,mx,cor='var(--gold)')=>`<div style="background:var(--border);border-radius:3px;height:5px;flex:1;overflow:hidden"><div style="height:100%;border-radius:3px;background:${cor};width:${mx>0?(v/mx*100).toFixed(1):0}%"></div></div>`;
+  const fmtPeso=(g)=>{ if(!g||g<=0) return "—"; if(g>=1000) return (g/1000).toFixed(3).replace(/\.?0+$/,"")+"u00a0kg"; return g.toFixed(1).replace(/\.0$/,"")+"u00a0g"; };
+  const bar=(v,mx,cor="var(--gold)")=>`<div style="background:var(--border);border-radius:3px;height:5px;flex:1;overflow:hidden"><div style="height:100%;border-radius:3px;background:${cor};width:${mx>0?(v/mx*100).toFixed(1):0}%"></div></div>`;
 
   const tblCor=()=>{
     const s=Object.entries(byCor).sort((a,b)=>b[1].c-a[1].c); if(!s.length) return '<div class="nd">Sem dados de flash.</div>';
     const mx=s[0][1].c;
-    return `<div class="tw"><table><thead><tr><th>Cor</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Lotes</th><th class="tr">g/kg banhado</th></tr></thead><tbody>
+    return `<div class="tw"><table><thead><tr><th>Cor</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Lotes</th></tr></thead><tbody>
     ${s.map(([k,v])=>`<tr>
       <td><div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:var(--gold);display:inline-block"></span><strong>${k}</strong></div></td>
-      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr">${fmtPeso(v.p)}</td>
       <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx)}<strong class="tg">${v.c.toFixed(4)} g</strong></div></td>
       <td class="tr">${v.n}</td>
-      <td class="tr" style="color:var(--text3)">${v.p>0?(v.c/v.p*1000).toFixed(4)+' g/kg':'—'}</td>
     </tr>`).join('')}
-    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${(tPesoO/1000).toFixed(3)} kg</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.tipo_lancamento==='flash').length}</td><td class="tr" style="color:var(--text3)">${tPesoO>0?(tO/tPesoO*1000).toFixed(4)+' g/kg':'—'}</td></tr>
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${fmtPeso(tPesoO)}</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.tipo_lancamento==='flash').length}</td></tr>
     </tbody></table></div>`;
   };
 
@@ -1381,38 +1381,37 @@ function gerarRel() {
     return `<div class="tw"><table><thead><tr><th>Camada</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Lotes</th><th>Cores usadas</th></tr></thead><tbody>
     ${s.map(([k,v])=>`<tr>
       <td><strong style="font-family:monospace;color:var(--gold-dark)">${k}</strong></td>
-      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr">${fmtPeso(v.p)}</td>
       <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx)}<strong class="tg">${v.c.toFixed(4)} g</strong></div></td>
       <td class="tr">${v.n}</td>
       <td style="font-size:11px;color:var(--text3)">${[...v.cor].join(', ')||'—'}</td>
     </tr>`).join('')}
-    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${(tPesoO/1000).toFixed(3)} kg</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.camada&&l.camada!=='—').length}</td><td></td></tr>
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${fmtPeso(tPesoO)}</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.camada&&l.camada!=='—').length}</td><td></td></tr>
     </tbody></table></div>`;
   };
 
   const tblCamP=()=>{
     const s=Object.entries(byCamP).sort((a,b)=>b[1].c-a[1].c); if(!s.length) return '<div class="nd">Sem lançamentos de prata com camada.</div>';
     const mx=s[0][1].c;
-    return `<div class="tw"><table><thead><tr><th>Camada</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Prata</th><th class="tr">Lotes</th><th class="tr">g/kg banhado</th></tr></thead><tbody>
+    return `<div class="tw"><table><thead><tr><th>Camada</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Prata</th><th class="tr">Lotes</th></tr></thead><tbody>
     ${s.map(([k,v])=>`<tr>
       <td><strong style="font-family:monospace;color:var(--silver-dark)">${k}</strong></td>
-      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr">${fmtPeso(v.p)}</td>
       <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx,'var(--silver)')}<strong class="ts">${v.c.toFixed(4)} g</strong></div></td>
       <td class="tr">${v.n}</td>
-      <td class="tr" style="color:var(--text3)">${v.p>0?(v.c/v.p*1000).toFixed(4)+' g/kg':'—'}</td>
     </tr>`).join('')}
-    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${(tPesoP/1000).toFixed(3)} kg</td><td class="tr ts">${tP.toFixed(4)} g</td><td class="tr">${lanP.filter(l=>l.camada&&l.camada!=='—').length}</td><td class="tr" style="color:var(--text3)">${tPesoP>0?(tP/tPesoP*1000).toFixed(4)+' g/kg':'—'}</td></tr>
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${fmtPeso(tPesoP)}</td><td class="tr ts">${tP.toFixed(4)} g</td><td class="tr">${lanP.filter(l=>l.camada&&l.camada!=='—').length}</td></tr>
     </tbody></table></div>`;
   };
 
   const tblCorCam=()=>{
     const s=Object.values(corCam).sort((a,b)=>b.c-a.c); if(!s.length) return '<div class="nd">Sem dados.</div>';
     const mx=s[0].c;
-    return `<div class="tw"><table><thead><tr><th>Cor</th><th>Camada</th><th class="tr">Peso Banhado</th><th class="tr">Consumo(g)</th><th class="tr">Lotes</th></tr></thead><tbody>
+    return `<div class="tw"><table><thead><tr><th>Cor</th><th>Camada</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Lotes</th></tr></thead><tbody>
     ${s.map(v=>`<tr>
       <td>${v.cor}</td>
       <td><span style="font-family:monospace;font-size:11px;color:var(--gold-dark)">${v.cam}</span></td>
-      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr">${fmtPeso(v.p)}</td>
       <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx)}<strong class="tg">${v.c.toFixed(4)} g</strong></div></td>
       <td class="tr">${v.n}</td>
     </tr>`).join('')}
@@ -1425,11 +1424,11 @@ function gerarRel() {
     return `<div class="tw"><table><thead><tr><th>Tipo de Peça</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Lotes</th></tr></thead><tbody>
     ${s.map(([k,v])=>`<tr>
       <td><strong>${k}</strong></td>
-      <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.p,mx,'var(--blue)')}<strong>${(v.p/1000).toFixed(3)} kg</strong></div></td>
+      <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.p,mx,'var(--blue)')}<strong>${fmtPeso(v.p)}</strong></div></td>
       <td class="tr tg">${v.c.toFixed(4)} g</td>
       <td class="tr">${v.n}</td>
     </tr>`).join('')}
-    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${(tPesoO/1000).toFixed(3)} kg</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.tipo_lancamento==='flash').length}</td></tr>
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${fmtPeso(tPesoO)}</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.tipo_lancamento==='flash').length}</td></tr>
     </tbody></table></div>`;
   };
 
@@ -1439,7 +1438,7 @@ function gerarRel() {
     return `<div class="tw"><table><thead><tr><th>Tipo</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Metal</th><th class="tr">Lotes</th></tr></thead><tbody>
     ${s.map(([k,v])=>`<tr>
       <td><span class="badge ${TIPOS[k]?.badge||'bg-gold'}">${TIPOS[k]?.label||k}</span></td>
-      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr">${fmtPeso(v.p)}</td>
       <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx)}<strong class="tg">${v.c.toFixed(4)} g</strong></div></td>
       <td class="tr">${v.n}</td>
     </tr>`).join('')}
@@ -1452,7 +1451,7 @@ function gerarRel() {
     return `<div class="tw"><table><thead><tr><th>Data</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Consumo Prata</th><th class="tr">Total Metal</th><th class="tr">Lotes</th></tr></thead><tbody>
     ${diasL.map(([d,v])=>`<tr>
       <td><strong>${fmtDate(d)}</strong></td>
-      <td class="tr">${(v.pesoO+v.pesoP)>0?((v.pesoO+v.pesoP)/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr">${fmtPeso(v.pesoO+v.pesoP)}</td>
       <td class="tr"><div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">${bar(v.o,mxO)}<span class="tg">${v.o>0?v.o.toFixed(4):'—'}</span></div></td>
       <td class="tr ts">${v.p>0?v.p.toFixed(4):'—'}</td>
       <td class="tr" style="font-weight:700">${(v.o+v.p).toFixed(4)} g</td>
@@ -1460,7 +1459,7 @@ function gerarRel() {
     </tr>`).join('')}
     <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc">
       <td>TOTAL</td>
-      <td class="tr">${((tPesoO+tPesoP)/1000).toFixed(3)} kg</td>
+      <td class="tr">${fmtPeso(tPesoO+tPesoP)}</td>
       <td class="tr tg">${tO.toFixed(4)} g</td>
       <td class="tr ts">${tP.toFixed(4)} g</td>
       <td class="tr">${(tO+tP).toFixed(4)} g</td>
@@ -1476,8 +1475,8 @@ function gerarRel() {
     <div class="grid">
       <div class="stat s-g"><div class="slbl">Consumo Ouro</div><div class="sval vg">${tO.toFixed(4)} g</div><div class="ssub">${lanO.length} lançamentos</div></div>
       <div class="stat s-s"><div class="slbl">Consumo Prata</div><div class="sval vs">${tP.toFixed(4)} g</div><div class="ssub">${lanP.length} lançamentos</div></div>
-      <div class="stat s-b"><div class="slbl">Peso Banhado Ouro</div><div class="sval">${(tPesoO/1000).toFixed(3)} kg</div><div class="ssub">${tPesoO.toFixed(0)} g</div></div>
-      <div class="stat s-b"><div class="slbl">Peso Banhado Prata</div><div class="sval">${(tPesoP/1000).toFixed(3)} kg</div><div class="ssub">${tPesoP.toFixed(0)} g</div></div>
+      <div class="stat s-b"><div class="slbl">Peso Banhado Ouro</div><div class="sval">${fmtPeso(tPesoO)}</div><div class="ssub">${tPesoO.toFixed(0)} g</div></div>
+      <div class="stat s-b"><div class="slbl">Peso Banhado Prata</div><div class="sval">${fmtPeso(tPesoP)}</div><div class="ssub">${tPesoP.toFixed(0)} g</div></div>
       <div class="stat s-g"><div class="slbl">Compras Ouro</div><div class="sval">${tCompO.toFixed(3)} g</div><div class="ssub">${tValO>0?'R$ '+tValO.toFixed(2):'sem valor'}</div></div>
       <div class="stat s-s"><div class="slbl">Compras Prata</div><div class="sval">${tCompP.toFixed(3)} g</div><div class="ssub">${tValP>0?'R$ '+tValP.toFixed(2):'sem valor'}</div></div>
       <div class="stat s-gr"><div class="slbl">Estoque Ouro</div><div class="sval ${eO.est<0?'vr':'vg'}">${eO.est.toFixed(4)} g</div><div class="ssub">${eO.est<0?'⚠️ Negativo':'Disponível'}</div></div>
@@ -1527,7 +1526,7 @@ function gerarRel() {
     <div class="ct">🥈 Prata — Detalhamento</div>
     <div class="grid" style="margin-bottom:14px">
       <div class="stat s-s"><div class="slbl">Consumo Total</div><div class="sval vs">${tP.toFixed(4)} g</div><div class="ssub">${lanP.length} lançamentos</div></div>
-      <div class="stat s-s"><div class="slbl">Peso Banhado</div><div class="sval">${(tPesoP/1000).toFixed(3)} kg</div><div class="ssub">${tPesoP.toFixed(0)} g</div></div>
+      <div class="stat s-s"><div class="slbl">Peso Banhado</div><div class="sval">${fmtPeso(tPesoP)}</div><div class="ssub">${tPesoP.toFixed(0)} g</div></div>
       <div class="stat s-s"><div class="slbl">Rendimento Prata</div><div class="sval">${tPesoP>0?(tP/tPesoP*1000).toFixed(4):'—'}</div><div class="ssub">g prata / kg banhado</div></div>
       <div class="stat s-s"><div class="slbl">Média Diária</div><div class="sval">${diasL.filter(([,v])=>v.p>0).length>0?(tP/diasL.filter(([,v])=>v.p>0).length).toFixed(4):'—'} g</div><div class="ssub">por dia com prata</div></div>
     </div>
