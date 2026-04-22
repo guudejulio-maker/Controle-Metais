@@ -1358,7 +1358,7 @@ function gerarRel() {
   });
 
   /* ── HELPERS DE RENDER ── */
-  const fmtPeso=(g)=>{ if(!g||g<=0) return "—"; if(g>=1000) return (g/1000).toFixed(3).replace(/\.?0+$/,"")+"u00a0kg"; return g.toFixed(1).replace(/\.0$/,"")+"u00a0g"; };
+  const fmtPeso=(g)=>{ if(!g||g<=0) return "—"; if(g>=1000){ const v=parseFloat((g/1000).toFixed(3)); return v+" kg"; } return parseFloat(g.toFixed(1))+" g"; };
   const bar=(v,mx,cor="var(--gold)")=>`<div style="background:var(--border);border-radius:3px;height:5px;flex:1;overflow:hidden"><div style="height:100%;border-radius:3px;background:${cor};width:${mx>0?(v/mx*100).toFixed(1):0}%"></div></div>`;
 
   const tblCor=()=>{
