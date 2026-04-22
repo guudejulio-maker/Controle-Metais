@@ -1318,7 +1318,7 @@ function gerarRel() {
     byCorPeso[l.cor].p+=p; byCorPeso[l.cor].c+=c; byCorPeso[l.cor].n++;
   });
 
-  /* ── POR CAMADA ── */
+  /* ── POR CAMADA OURO ── */
   const byCam={};
   lanO.filter(l=>l.camada&&l.camada!=='—').forEach(l=>{
     const c=parseFloat(l.consumo_calc||0), p=parseFloat(l.peso_g||0);
@@ -1326,6 +1326,14 @@ function gerarRel() {
     if(!byCam[key]) byCam[key]={c:0,p:0,n:0,cor:new Set()};
     byCam[key].c+=c; byCam[key].p+=p; byCam[key].n++;
     if(l.cor&&l.cor!=='—') byCam[key].cor.add(l.cor);
+  });
+
+  /* ── POR CAMADA PRATA ── */
+  const byCamP={};
+  lanP.filter(l=>l.camada&&l.camada!=='—').forEach(l=>{
+    const c=parseFloat(l.consumo_calc||0), p=parseFloat(l.peso_g||0);
+    if(!byCamP[l.camada]) byCamP[l.camada]={c:0,p:0,n:0};
+    byCamP[l.camada].c+=c; byCamP[l.camada].p+=p; byCamP[l.camada].n++;
   });
 
   /* ── POR COR × CAMADA (flash) — tabela cruzada ── */
@@ -1378,6 +1386,22 @@ function gerarRel() {
       <td class="tr">${v.n}</td>
       <td style="font-size:11px;color:var(--text3)">${[...v.cor].join(', ')||'—'}</td>
     </tr>`).join('')}
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${(tPesoO/1000).toFixed(3)} kg</td><td class="tr tg">${tO.toFixed(4)} g</td><td class="tr">${lanO.filter(l=>l.camada&&l.camada!=='—').length}</td><td></td></tr>
+    </tbody></table></div>`;
+  };
+
+  const tblCamP=()=>{
+    const s=Object.entries(byCamP).sort((a,b)=>b[1].c-a[1].c); if(!s.length) return '<div class="nd">Sem lançamentos de prata com camada.</div>';
+    const mx=s[0][1].c;
+    return `<div class="tw"><table><thead><tr><th>Camada</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Prata</th><th class="tr">Lotes</th><th class="tr">g/kg banhado</th></tr></thead><tbody>
+    ${s.map(([k,v])=>`<tr>
+      <td><strong style="font-family:monospace;color:var(--silver-dark)">${k}</strong></td>
+      <td class="tr">${v.p>0?(v.p/1000).toFixed(3)+' kg':'—'}</td>
+      <td class="tr"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">${bar(v.c,mx,'var(--silver)')}<strong class="ts">${v.c.toFixed(4)} g</strong></div></td>
+      <td class="tr">${v.n}</td>
+      <td class="tr" style="color:var(--text3)">${v.p>0?(v.c/v.p*1000).toFixed(4)+' g/kg':'—'}</td>
+    </tr>`).join('')}
+    <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc"><td>TOTAL</td><td class="tr">${(tPesoP/1000).toFixed(3)} kg</td><td class="tr ts">${tP.toFixed(4)} g</td><td class="tr">${lanP.filter(l=>l.camada&&l.camada!=='—').length}</td><td class="tr" style="color:var(--text3)">${tPesoP>0?(tP/tPesoP*1000).toFixed(4)+' g/kg':'—'}</td></tr>
     </tbody></table></div>`;
   };
 
@@ -1477,11 +1501,17 @@ function gerarRel() {
     ${tblCorCam()}
   </div>
 
-  <!-- POR CAMADA -->
+  <!-- POR CAMADA OURO -->
   <div class="card">
-    <div class="ct">🔩 Por Camada Utilizada</div>
+    <div class="ct">🔩 Ouro — Por Camada Utilizada</div>
     ${tblCam()}
   </div>
+
+  <!-- POR CAMADA PRATA -->
+  ${lanP.length?`<div class="card">
+    <div class="ct">🔩 Prata — Por Camada Utilizada</div>
+    ${tblCamP()}
+  </div>`:''}
 
   <!-- POR TIPO DE PEÇA -->
   ${Object.keys(byPeca).length?`<div class="card"><div class="ct">💎 Por Tipo de Peça</div>${tblPeca()}</div>`:''}
@@ -1491,6 +1521,18 @@ function gerarRel() {
     <div class="ct">📦 Por Tipo de Lançamento</div>
     ${tblTipo()}
   </div>
+
+  <!-- PRATA — RESUMO SEPARADO -->
+  ${lanP.length?`<div class="card">
+    <div class="ct">🥈 Prata — Detalhamento</div>
+    <div class="grid" style="margin-bottom:14px">
+      <div class="stat s-s"><div class="slbl">Consumo Total</div><div class="sval vs">${tP.toFixed(4)} g</div><div class="ssub">${lanP.length} lançamentos</div></div>
+      <div class="stat s-s"><div class="slbl">Peso Banhado</div><div class="sval">${(tPesoP/1000).toFixed(3)} kg</div><div class="ssub">${tPesoP.toFixed(0)} g</div></div>
+      <div class="stat s-s"><div class="slbl">Rendimento Prata</div><div class="sval">${tPesoP>0?(tP/tPesoP*1000).toFixed(4):'—'}</div><div class="ssub">g prata / kg banhado</div></div>
+      <div class="stat s-s"><div class="slbl">Média Diária</div><div class="sval">${diasL.filter(([,v])=>v.p>0).length>0?(tP/diasL.filter(([,v])=>v.p>0).length).toFixed(4):'—'} g</div><div class="ssub">por dia com prata</div></div>
+    </div>
+    ${tblCamP()}
+  </div>`:''}
 
   <!-- POR DIA -->
   <div class="card">
