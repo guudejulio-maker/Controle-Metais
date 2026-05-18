@@ -274,6 +274,26 @@ td{padding:8px 12px;vertical-align:middle}
 .mes-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .mes-card-title{font-weight:700;font-size:13px}
 .mes-card-vals{display:flex;gap:16px;font-size:12px}
+
+/* FOLHEAÇÃO — blocos lado a lado */
+.fo-blocks{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px}
+@media(max-width:700px){.fo-blocks{grid-template-columns:1fr}}
+.fo-block{background:#22262f;border:1px solid #2d3340;border-radius:var(--rs);padding:14px}
+.fo-block.fo-ref{border-left:3px solid var(--green)}
+.fo-block.fo-con{border-left:3px solid var(--gold)}
+.fo-block-h{font-size:11px;font-weight:700;color:#c9952a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.fo-block.fo-ref .fo-block-h{color:#4ade80}
+.fo-saldo-box{background:linear-gradient(135deg,#fdf3dc 0%,#fff 100%);border:1px solid var(--gold);border-radius:var(--rs);padding:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.fo-saldo-box.neg{background:linear-gradient(135deg,#fde8e6 0%,#fff 100%);border-color:var(--red)}
+.fo-saldo-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2)}
+.fo-saldo-val{font-size:22px;font-weight:800;color:var(--gold-dark)}
+.fo-saldo-box.neg .fo-saldo-val{color:var(--red)}
+.fo-mini{display:flex;gap:14px;font-size:12px}
+.fo-mini > div{text-align:center}
+.fo-mini-lbl{font-size:10px;text-transform:uppercase;color:var(--text3);font-weight:700}
+.fo-mini-val{font-weight:700;font-size:14px}
+.fo-mini-val.ref{color:var(--green)}
+.fo-mini-val.con{color:var(--orange)}
 </style>
 </head>
 <body>
@@ -340,17 +360,50 @@ td{padding:8px 12px;vertical-align:middle}
         <button class="btn-save" onclick="salvarLan()">✔ SALVAR FLASH</button>
       </div>
 
-      <!-- FOLHEAÇÃO -->
+      <!-- FOLHEAÇÃO — CONTA SEPARADA -->
       <div id="form-folheacao" class="hidden">
-        <div class="lrow">
-          <div class="lf w110"><label>📅 Data</label><input type="date" id="fo-data"></div>
-          <div class="lf w130"><label>🔩 Camada (ex: 0.002)</label><input type="number" id="fo-cam" step="0.00001" placeholder="0.00000" oninput="calcFolheacao()"></div>
-          <div class="lf w110"><label>⚖️ Peso (kg)</label><input type="number" id="fo-peso" step="0.001" placeholder="0.000" oninput="calcFolheacao()"></div>
-          <div class="lf w90"><label>Unidade</label><select id="fo-un" onchange="calcFolheacao()"><option value="kg">kg</option><option value="g">g</option></select></div>
-          <div class="lf wflex"><label>Obs</label><input type="text" id="fo-obs" placeholder="Opcional..."></div>
+        <div class="fo-saldo-box" id="fo-saldo-box">
+          <div>
+            <div class="fo-saldo-lbl">💰 Saldo Atual da Folheação</div>
+            <div class="fo-saldo-val" id="fo-saldo-val">—</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" id="fo-saldo-status">conta interna independente do estoque geral</div>
+          </div>
+          <div class="fo-mini">
+            <div><div class="fo-mini-lbl">Reforçado no mês</div><div class="fo-mini-val ref" id="fo-mes-ref">0,000 g</div></div>
+            <div><div class="fo-mini-lbl">Consumido no mês</div><div class="fo-mini-val con" id="fo-mes-con">0,000 g</div></div>
+          </div>
         </div>
-        <div class="prev" id="prev-folheacao"><span>Preencha peso e camada ▶</span></div>
-        <button class="btn-save" onclick="salvarLan()">✔ SALVAR FOLHEAÇÃO</button>
+
+        <div class="fo-blocks">
+          <!-- REFORÇO -->
+          <div class="fo-block fo-ref">
+            <div class="fo-block-h">➕ Registrar Reforço (entra no saldo · sai do estoque geral)</div>
+            <div class="lrow">
+              <div class="lf w110"><label>📅 Data</label><input type="date" id="for-data"></div>
+              <div class="lf w130"><label>⚖️ Ouro reforçado (g)</label><input type="number" id="for-qtd" step="0.001" placeholder="0.000"></div>
+              <div class="lf wflex"><label>Obs</label><input type="text" id="for-obs" placeholder="Opcional..."></div>
+            </div>
+            <button class="btn-save" style="background:var(--green)" onclick="salvarFolReforco()">✔ SALVAR REFORÇO</button>
+          </div>
+
+          <!-- CONSUMO -->
+          <div class="fo-block fo-con">
+            <div class="fo-block-h">➖ Registrar Consumo (sai apenas do saldo interno)</div>
+            <div class="lrow">
+              <div class="lf w110"><label>📅 Data</label><input type="date" id="foc-data"></div>
+              <div class="lf w130"><label>🔩 Camada (ex: 0.002)</label><input type="number" id="foc-cam" step="0.00001" placeholder="0.00000" oninput="calcFolheacaoConsumo()"></div>
+              <div class="lf w110"><label>⚖️ Peso</label><input type="number" id="foc-peso" step="0.001" placeholder="0.000" oninput="calcFolheacaoConsumo()"></div>
+              <div class="lf w90"><label>Unidade</label><select id="foc-un" onchange="calcFolheacaoConsumo()"><option value="kg">kg</option><option value="g">g</option></select></div>
+              <div class="lf wflex"><label>Obs</label><input type="text" id="foc-obs" placeholder="Opcional..."></div>
+            </div>
+            <div class="prev" id="prev-folheacao-cons"><span>Preencha peso e camada ▶</span></div>
+            <button class="btn-save" onclick="salvarFolConsumo()">✔ SALVAR CONSUMO</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);padding:6px 4px;line-height:1.6">
+          💡 <strong>Regra:</strong> Reforço diminui o estoque geral de Ouro e aumenta o saldo da folheação.
+          Consumo afeta APENAS o saldo da folheação (não desconta do estoque geral, pois o ouro já saiu no momento do reforço).
+        </div>
       </div>
 
       <!-- PRÉ-OURO -->
@@ -429,6 +482,7 @@ td{padding:8px 12px;vertical-align:middle}
           <option value="hoje">Hoje</option>
           <option value="semana">Esta Semana</option>
           <option value="mes" selected>Este Mês</option>
+          <option value="mes-sel">Mês específico…</option>
           <option value="tudo">Todo o histórico</option>
         </select>
         <select id="f-mes-sel" onchange="renderLan()" class="hidden" style="border:1.5px solid var(--border2);border-radius:var(--rs);padding:5px 8px;font-size:12px;outline:none;background:var(--surface)"></select>
@@ -440,7 +494,9 @@ td{padding:8px 12px;vertical-align:middle}
         <select id="f-tipo-lan" onchange="renderLan()" style="border:1.5px solid var(--border2);border-radius:var(--rs);padding:5px 8px;font-size:12px;outline:none;background:var(--surface)">
           <option value="">Todos os tipos</option>
           <option value="flash">Flash</option>
-          <option value="folheacao">Folheação</option>
+          <option value="folheacao">Folheação (legado)</option>
+          <option value="folheacao_reforco">Folheação Reforço</option>
+          <option value="folheacao_consumo">Folheação Consumo</option>
           <option value="pre_ouro">Pré-Ouro</option>
           <option value="pre_ouro_flash">Pré-Ouro Flash</option>
           <option value="ouro_extra">Ouro Extra</option>
@@ -573,8 +629,10 @@ td{padding:8px 12px;vertical-align:middle}
       <option value="semana">Esta Semana</option>
       <option value="mes" selected>Este Mês</option>
       <option value="mes-ant">Mês Anterior</option>
+      <option value="mes-sel">Mês específico…</option>
       <option value="custom">Personalizado</option>
     </select>
+    <select id="r-mes-sel" class="hidden" onchange="gerarRel()"></select>
     <input type="date" id="r-di" class="hidden">
     <input type="date" id="r-df" class="hidden">
     <select id="r-metal"><option value="">Ouro + Prata</option><option value="Ouro">Ouro</option><option value="Prata">Prata</option></select>
@@ -599,8 +657,9 @@ td{padding:8px 12px;vertical-align:middle}
     <div class="fg">
       <div class="fi"><label>Ouro Inicial do Novo Mês (g)</label><input type="number" id="fm-ouro" step="0.001" placeholder="0.000"></div>
       <div class="fi"><label>Prata Inicial do Novo Mês (g)</label><input type="number" id="fm-prata" step="0.001" placeholder="0.000"></div>
+      <div class="fi"><label>Saldo Inicial Folheação (g)</label><input type="number" id="fm-folheacao" step="0.001" placeholder="0.000"></div>
     </div>
-    <p style="font-size:11px;color:var(--text3);margin-bottom:12px">💡 Deixe em branco para usar o estoque final calculado automaticamente.</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:12px">💡 Deixe em branco para usar o valor final calculado automaticamente do mês atual.</p>
     <div class="brow"><button class="btn bd" onclick="fecharMes()">🔒 Fechar Mês e Iniciar Novo</button></div>
   </div>
 </div>
@@ -644,6 +703,7 @@ td{padding:8px 12px;vertical-align:middle}
       <div class="fg">
         <div class="fi"><label>Ouro Inicial (g)</label><input type="number" id="cfg-oi" step="0.001" placeholder="0.000"></div>
         <div class="fi"><label>Prata Inicial (g)</label><input type="number" id="cfg-pi" step="0.001" placeholder="0.000"></div>
+        <div class="fi"><label>Saldo Inicial Folheação (g)</label><input type="number" id="cfg-fi" step="0.001" placeholder="0.000"></div>
       </div>
       <button class="btn bp bsm" onclick="salvarIniciais()">💾 Salvar Iniciais</button>
     </div>
@@ -709,20 +769,22 @@ let CFG = {
     {nome:'20 milésimos',valor:0.020},{nome:'30 milésimos',valor:0.030},
     {nome:'50 milésimos',valor:0.050},{nome:'70 milésimos',valor:0.070}
   ],
-  ouro_inicial: {}, prata_inicial: {}
+  ouro_inicial: {}, prata_inicial: {}, folheacao_inicial: {}
 };
 
-let LAN=[], COMP=[], AJ=[], MESES=[];
+let LAN=[], COMP=[], AJ=[], MESES=[], FOL=[];
 let TIPO_ATIVO = 'flash';
 
 const TIPOS = {
-  flash:         {label:'Flash',         badge:'bg-gold',   metal:'Ouro'},
-  folheacao:     {label:'Folheação',     badge:'bg-gold',   metal:'Ouro'},
-  pre_ouro:      {label:'Pré-Ouro',      badge:'bg-orange', metal:'Ouro'},
-  pre_ouro_flash:{label:'Pré-Ouro Flash',badge:'bg-orange', metal:'Ouro'},
-  ouro_extra:    {label:'Ouro Extra',    badge:'bg-red',    metal:'Ouro'},
-  montagem_cor:  {label:'Montagem Cor',  badge:'bg-purple', metal:'Ouro'},
-  prata:         {label:'Prata',         badge:'bg-silver', metal:'Prata'},
+  flash:             {label:'Flash',           badge:'bg-gold',   metal:'Ouro'},
+  folheacao:         {label:'Folheação',       badge:'bg-gold',   metal:'Ouro'},
+  folheacao_reforco: {label:'Fol. Reforço',    badge:'bg-green',  metal:'Ouro'},
+  folheacao_consumo: {label:'Fol. Consumo',    badge:'bg-orange', metal:'Ouro'},
+  pre_ouro:          {label:'Pré-Ouro',        badge:'bg-orange', metal:'Ouro'},
+  pre_ouro_flash:    {label:'Pré-Ouro Flash',  badge:'bg-orange', metal:'Ouro'},
+  ouro_extra:        {label:'Ouro Extra',      badge:'bg-red',    metal:'Ouro'},
+  montagem_cor:      {label:'Montagem Cor',    badge:'bg-purple', metal:'Ouro'},
+  prata:             {label:'Prata',           badge:'bg-silver', metal:'Prata'},
 };
 
 function getMes() { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
@@ -746,7 +808,7 @@ async function init() {
     setSt('ok','✓ Online');
     populateSels();
     setDatas();
-    ['fl-un','fo-un','po-un','pr-un'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value='kg'; });
+    ['fl-un','po-un','pr-un','foc-un'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value='kg'; });
     populateMesSel();
     renderLan();
     renderDashboard();
@@ -760,12 +822,20 @@ async function init() {
 }
 
 async function loadData() {
-  [LAN,COMP,AJ,MESES] = await Promise.all([
+  const [lan,comp,aj,mes] = await Promise.all([
     db.get('metais_lancamentos','?order=datetime_lancamento.desc'),
     db.get('metais_compras','?order=data.desc'),
     db.get('metais_ajustes','?order=data.desc'),
     db.get('metais_meses','?order=mes_key.desc')
   ]);
+  LAN=lan; COMP=comp; AJ=aj; MESES=mes;
+  // Folheação: se a tabela ainda não existir, segue sem quebrar
+  try {
+    FOL = await db.get('metais_folheacao_movimentos','?order=data.desc');
+  } catch(e) {
+    console.warn('Tabela metais_folheacao_movimentos não encontrada — rode o SQL antes de usar folheação.', e.message);
+    FOL = [];
+  }
 }
 
 async function garantirMes() {
@@ -814,11 +884,12 @@ function selTipo(t) {
     document.getElementById('form-'+x).classList.toggle('hidden',x!==t);
   });
   cancelEdit();
+  if(t==='folheacao') renderFolheacaoBox();
 }
 
 function setDatas() {
   const d=hoje();
-  ['fl','fo','po','pof','oe','mc','pr'].forEach(p=>{
+  ['fl','fo','po','pof','oe','mc','pr','for','foc'].forEach(p=>{
     const el=document.getElementById(p+'-data'); if(el&&!el.value) el.value=d;
   });
 }
@@ -843,11 +914,27 @@ function fillSel(id, opts) {
   if(prev) el.value=prev;
 }
 
+function getAllMeses() {
+  // Une mes_keys de MESES, LAN, COMP, AJ, FOL para gerar lista completa
+  const set = new Set();
+  MESES.forEach(m=>m.mes_key && set.add(m.mes_key));
+  LAN.forEach(l=>l.mes_key && set.add(l.mes_key));
+  COMP.forEach(c=>c.mes_key && set.add(c.mes_key));
+  AJ.forEach(a=>a.mes_key && set.add(a.mes_key));
+  FOL.forEach(f=>f.mes_key && set.add(f.mes_key));
+  set.add(getMes());
+  return [...set].sort().reverse();
+}
+
 function populateMesSel() {
-  const sel=document.getElementById('f-mes-sel'); if(!sel) return;
-  sel.innerHTML='';
-  MESES.forEach(m=>sel.appendChild(new Option(fmtMes(m.mes_key),m.mes_key)));
-  sel.value=getMes();
+  const all = getAllMeses();
+  ['f-mes-sel','r-mes-sel'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const prev = sel.value;
+    sel.innerHTML='';
+    all.forEach(k=>sel.appendChild(new Option(fmtMes(k),k)));
+    sel.value = prev || getMes();
+  });
 }
 
 /* ============================================================
@@ -868,7 +955,7 @@ function calcShow(peso, un, cam, prevId, metal) {
 }
 
 function calcFlash()     { calcShow(parseFloat(document.getElementById('fl-peso').value)||0, document.getElementById('fl-un').value, document.getElementById('fl-cam').value,'prev-flash','Ouro'); }
-function calcFolheacao() { calcShow(parseFloat(document.getElementById('fo-peso').value)||0, document.getElementById('fo-un').value, document.getElementById('fo-cam').value,'prev-folheacao','Ouro'); }
+function calcFolheacaoConsumo() { calcShow(parseFloat(document.getElementById('foc-peso').value)||0, document.getElementById('foc-un').value, document.getElementById('foc-cam').value,'prev-folheacao-cons','Ouro'); }
 function calcPreOuro()   { calcShow(parseFloat(document.getElementById('po-peso').value)||0, document.getElementById('po-un').value, document.getElementById('po-cam').value,'prev-pre_ouro','Ouro'); }
 function calcPrata()     { calcShow(parseFloat(document.getElementById('pr-peso').value)||0, document.getElementById('pr-un').value, document.getElementById('pr-cam').value,'prev-prata','Prata'); }
 
@@ -891,10 +978,9 @@ async function salvarLan() {
     if(!pg||!cam) { toast('Informe peso e camada.','error'); return; }
     payload={metal:'Ouro',tipo_peca:document.getElementById('fl-tipo').value,peso_g:pg,cor:document.getElementById('fl-cor').value,camada:cam.toString(),consumo_calc:pg*cam,obs:document.getElementById('fl-obs').value||null,datetime_lancamento:document.getElementById('fl-data').value+'T00:00:00'};
   } else if(t==='folheacao') {
-    const pg=pesoToKg(parseFloat(document.getElementById('fo-peso').value)||0, document.getElementById('fo-un').value);
-    const cam=parseFloat(document.getElementById('fo-cam').value)||0;
-    if(!pg||!cam) { toast('Informe peso e camada.','error'); return; }
-    payload={metal:'Ouro',tipo_peca:'Folheação',peso_g:pg,cor:'—',camada:cam.toString(),consumo_calc:pg*cam,obs:document.getElementById('fo-obs').value||null,datetime_lancamento:document.getElementById('fo-data').value+'T00:00:00'};
+    // Folheação não é mais salva via salvarLan — usa salvarFolReforco / salvarFolConsumo
+    toast('Use os botões de Reforço ou Consumo da Folheação.','error');
+    return;
   } else if(t==='pre_ouro') {
     const pg=pesoToKg(parseFloat(document.getElementById('po-peso').value)||0, document.getElementById('po-un').value);
     const cam=parseFloat(document.getElementById('po-cam').value)||0;
@@ -945,20 +1031,21 @@ async function salvarLan() {
 }
 
 function limparForm(t) {
-  const m={'flash':['fl-peso','fl-cam','fl-obs'],'folheacao':['fo-peso','fo-cam','fo-obs'],'pre_ouro':['po-peso','po-cam','po-obs'],'pre_ouro_flash':['pof-qtd','pof-obs'],'ouro_extra':['oe-qtd','oe-obs'],'montagem_cor':['mc-qtd','mc-obs'],'prata':['pr-peso','pr-cam','pr-obs']};
+  const m={'flash':['fl-peso','fl-cam','fl-obs'],'pre_ouro':['po-peso','po-cam','po-obs'],'pre_ouro_flash':['pof-qtd','pof-obs'],'ouro_extra':['oe-qtd','oe-obs'],'montagem_cor':['mc-qtd','mc-obs'],'prata':['pr-peso','pr-cam','pr-obs']};
   (m[t]||[]).forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  const pvs={'flash':'prev-flash','folheacao':'prev-folheacao','pre_ouro':'prev-pre_ouro','pre_ouro_flash':'prev-pof','prata':'prev-prata'};
+  const pvs={'flash':'prev-flash','pre_ouro':'prev-pre_ouro','pre_ouro_flash':'prev-pof','prata':'prev-prata'};
   if(pvs[t]) { const el=document.getElementById(pvs[t]); if(el) el.innerHTML='<span>Preencha peso e camada ▶</span>'; }
 }
 
 function editarLan(id) {
   const l=LAN.find(x=>x.id===id); if(!l) return;
   const t=l.tipo_lancamento||'flash';
+  // lançamentos antigos de folheacao não podem mais ser editados pelo form (que agora é só Reforço/Consumo)
+  if(t==='folheacao') { toast('Este é um lançamento antigo de folheação. Para editar, exclua e registre como Reforço ou Consumo.','error'); return; }
   selTipo(t);
   const data=l.datetime_lancamento?.split('T')[0]||hoje();
   const sets={
     flash: ()=>{ document.getElementById('fl-data').value=data; document.getElementById('fl-tipo').value=l.tipo_peca; document.getElementById('fl-cor').value=l.cor; document.getElementById('fl-cam').value=l.camada; document.getElementById('fl-peso').value=l.peso_g; document.getElementById('fl-obs').value=l.obs||''; calcFlash(); },
-    folheacao: ()=>{ document.getElementById('fo-data').value=data; document.getElementById('fo-cam').value=l.camada; document.getElementById('fo-peso').value=l.peso_g; document.getElementById('fo-obs').value=l.obs||''; calcFolheacao(); },
     pre_ouro: ()=>{ document.getElementById('po-data').value=data; document.getElementById('po-cam').value=l.camada; document.getElementById('po-peso').value=l.peso_g; document.getElementById('po-obs').value=l.obs||''; calcPreOuro(); },
     pre_ouro_flash: ()=>{ document.getElementById('pof-data').value=data; document.getElementById('pof-qtd').value=l.consumo_calc; document.getElementById('pof-obs').value=l.obs||''; prevPOF(); },
     ouro_extra: ()=>{ document.getElementById('oe-data').value=data; document.getElementById('oe-qtd').value=l.consumo_calc; document.getElementById('oe-dest').value=l.cor; document.getElementById('oe-obs').value=l.obs||''; },
@@ -980,10 +1067,117 @@ async function delLan(id) {
 }
 
 /* ============================================================
+   FOLHEAÇÃO — CONTA SEPARADA
+   - Reforço: sai do estoque geral de Ouro, entra no saldo da Folheação
+   - Consumo: sai SOMENTE do saldo da Folheação (não toca o estoque geral)
+============================================================ */
+function calcFolSaldo(mesKey) {
+  // Saldo Folheação = inicial(mes) + reforços(mes) - consumos(mes)
+  // Lançamentos antigos de tipo 'folheacao' contam como consumo da folheação no mês deles
+  const ini = parseFloat(CFG.folheacao_inicial?.[mesKey]) || 0;
+  const fmes = FOL.filter(f=>f.mes_key===mesKey);
+  const ref = fmes.filter(f=>f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0);
+  const con = fmes.filter(f=>f.tipo==='consumo').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0);
+  // Compatibilidade: lançamentos antigos de folheacao (legado) somam ao consumo da folheação
+  const conLegado = LAN.filter(l=>l.mes_key===mesKey && l.tipo_lancamento==='folheacao').reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+  const consTot = con + conLegado;
+  return { ini, ref, con: consTot, saldo: ini + ref - consTot };
+}
+
+function renderFolheacaoBox() {
+  // popula o box de saldo no formulário de Folheação
+  const s = calcFolSaldo(getMes());
+  const box = document.getElementById('fo-saldo-box');
+  const val = document.getElementById('fo-saldo-val');
+  const st  = document.getElementById('fo-saldo-status');
+  const r   = document.getElementById('fo-mes-ref');
+  const c   = document.getElementById('fo-mes-con');
+  if(!box) return;
+  const neg = s.saldo < 0;
+  box.classList.toggle('neg', neg);
+  val.textContent = (s.saldo>=0?'+':'') + s.saldo.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}) + ' g';
+  st.textContent = neg ? `⚠️ Faltam ${Math.abs(s.saldo).toFixed(3)} g para equilibrar` : 'conta interna · independente do estoque geral';
+  if(r) r.textContent = '+' + s.ref.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}) + ' g';
+  if(c) c.textContent = '−' + s.con.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}) + ' g';
+}
+
+async function salvarFolReforco() {
+  const data = document.getElementById('for-data').value;
+  const qtd  = parseFloat(document.getElementById('for-qtd').value)||0;
+  const obs  = document.getElementById('for-obs').value || null;
+  if(!data || qtd<=0) { toast('Informe data e quantidade de ouro reforçada (> 0).','error'); return; }
+  const payload = { data, mes_key: getMes(), tipo:'reforco', quantidade_g:qtd, obs, fechado:false };
+  try {
+    setSt('load','⏳');
+    const r = await db.post('metais_folheacao_movimentos', payload);
+    FOL.unshift(r[0]);
+    setSt('ok','✓ Online');
+    document.getElementById('for-qtd').value=''; document.getElementById('for-obs').value='';
+    renderFolheacaoBox(); renderLan(); renderDashboard(); checkAlerts();
+    toast('Reforço registrado! (-'+qtd.toFixed(3)+' g do estoque geral)');
+  } catch(e) { setSt('err','✗ Erro'); toast('Erro: '+e.message+' — você rodou o SQL?','error'); }
+}
+
+async function salvarFolConsumo() {
+  const data = document.getElementById('foc-data').value;
+  const peso = parseFloat(document.getElementById('foc-peso').value)||0;
+  const un   = document.getElementById('foc-un').value;
+  const cam  = parseFloat(document.getElementById('foc-cam').value)||0;
+  const obs  = document.getElementById('foc-obs').value || null;
+  if(!data || !peso || !cam) { toast('Informe data, peso e camada.','error'); return; }
+  const pesoKg = pesoToKg(peso, un);
+  const cons = pesoKg * cam; // g
+  if(cons<=0) { toast('Consumo calculado é zero. Confira peso e camada.','error'); return; }
+  const payload = { data, mes_key: getMes(), tipo:'consumo', quantidade_g:cons, peso_kg:pesoKg, camada:cam.toString(), obs, fechado:false };
+  try {
+    setSt('load','⏳');
+    const r = await db.post('metais_folheacao_movimentos', payload);
+    FOL.unshift(r[0]);
+    setSt('ok','✓ Online');
+    ['foc-peso','foc-cam','foc-obs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    const pv=document.getElementById('prev-folheacao-cons'); if(pv) pv.innerHTML='<span>Preencha peso e camada ▶</span>';
+    renderFolheacaoBox(); renderLan(); renderDashboard(); checkAlerts();
+    toast('Consumo da folheação registrado ('+cons.toFixed(4)+' g do saldo interno).');
+  } catch(e) { setSt('err','✗ Erro'); toast('Erro: '+e.message+' — você rodou o SQL?','error'); }
+}
+
+async function delFol(id) {
+  if(!confirm('Excluir este movimento de folheação?')) return;
+  try {
+    await fetch(`${SB}/rest/v1/metais_folheacao_movimentos?id=eq.${id}`,{method:'DELETE',headers:H});
+    FOL = FOL.filter(f=>f.id!=id);
+    renderFolheacaoBox(); renderLan(); renderDashboard(); checkAlerts();
+    toast('Movimento excluído.');
+  } catch(e) { toast('Erro: '+e.message,'error'); }
+}
+
+/* ============================================================
    RENDER LANÇAMENTOS
 ============================================================ */
 function getLanFiltrados() {
-  let data=[...LAN];
+  // Une LAN + FOL em uma lista unificada para o histórico
+  const folRows = FOL.map(f=>({
+    id: 'F'+f.id,                       // prefixo para distinguir
+    _foId: f.id,
+    _isFol: true,
+    metal: 'Ouro',
+    tipo_lancamento: f.tipo==='reforco' ? 'folheacao_reforco' : 'folheacao_consumo',
+    tipo_peca: f.tipo==='reforco' ? 'Reforço Folheação' : 'Consumo Folheação',
+    cor: '—',
+    camada: f.camada || '—',
+    peso_g: parseFloat(f.peso_kg||0)*1000,  // mostrar peso em g/kg uniformemente (fmtPeso espera kg via peso_g; mas peso_g normalmente está em kg na codebase original — manter consistência)
+    consumo_calc: parseFloat(f.quantidade_g||0),
+    obs: f.obs,
+    datetime_lancamento: (f.data||'')+'T00:00:00',
+    mes_key: f.mes_key,
+    fechado: f.fechado || false,
+  }));
+  // No padrão original, peso_g já está em kg. Folheação reforço não tem peso. Folheação consumo tem peso_kg em kg.
+  folRows.forEach(r=>{ if(r._isFol && r.tipo_lancamento==='folheacao_consumo') { r.peso_g = parseFloat(FOL.find(x=>x.id==r._foId)?.peso_kg||0); } else if(r._isFol) { r.peso_g = 0; } });
+
+  let data=[...LAN, ...folRows];
+  data.sort((a,b)=>(b.datetime_lancamento||'').localeCompare(a.datetime_lancamento||''));
+
   const per=document.getElementById('f-per')?.value||'mes';
   const fm=document.getElementById('f-metal')?.value||'';
   const ft=document.getElementById('f-tipo-lan')?.value||'';
@@ -996,9 +1190,8 @@ function getLanFiltrados() {
   else if(per==='mes') data=data.filter(l=>l.mes_key===getMes());
   else if(per==='mes-sel') {
     const m=document.getElementById('f-mes-sel')?.value; if(m) data=data.filter(l=>l.mes_key===m);
-    document.getElementById('f-mes-sel')?.classList.remove('hidden');
   }
-  if(per!=='mes-sel') document.getElementById('f-mes-sel')?.classList.add('hidden');
+  // 'tudo' -> não filtra por período
 
   if(fm) data=data.filter(l=>l.metal===fm);
   if(ft) data=data.filter(l=>l.tipo_lancamento===ft);
@@ -1008,41 +1201,58 @@ function getLanFiltrados() {
 
 function renderLan() {
   const tbody=document.getElementById('tb-lan'); if(!tbody) return;
-  const data=getLanFiltrados();
-  // mostra/esconde select de mês
+  // mostra/esconde select de mês conforme período escolhido
   const per=document.getElementById('f-per')?.value;
   document.getElementById('f-mes-sel')?.classList.toggle('hidden',per!=='mes-sel');
 
+  const data=getLanFiltrados();
   if(!data.length) { tbody.innerHTML=''; document.getElementById('lan-nd').classList.remove('hidden'); document.getElementById('lan-tot').textContent=''; return; }
   document.getElementById('lan-nd').classList.add('hidden');
 
-  let tO=0,tP=0;
+  let tO=0,tP=0, tFolRef=0, tFolCon=0;
   tbody.innerHTML=data.map(l=>{
     const ti=TIPOS[l.tipo_lancamento||'flash']||{label:l.tipo_lancamento,badge:'bg-gold'};
     const c=parseFloat(l.consumo_calc||0);
-    if(l.metal==='Ouro') tO+=c; else tP+=c;
+    // Contadores: ouro/prata só somam consumo OPERACIONAL no resumo
+    if(l._isFol) {
+      if(l.tipo_lancamento==='folheacao_reforco') tFolRef+=c;
+      else tFolCon+=c;
+    } else if(['folheacao'].includes(l.tipo_lancamento)) {
+      tFolCon+=c; // legado conta como consumo de folheação
+    } else if(l.metal==='Ouro') tO+=c; else tP+=c;
+
     const dt=l.datetime_lancamento?.split('T')[0]||'—';
     let det='';
     const tl=l.tipo_lancamento||'flash';
     if(tl==='flash') det=`${l.tipo_peca} · <strong>${l.cor}</strong>`;
     else if(tl==='ouro_extra') det=`Destino: <strong>${l.cor}</strong>`;
     else if(tl==='montagem_cor') det=`Cor: <strong>${l.cor}</strong>`;
+    else if(tl==='folheacao_reforco') det=`<strong style="color:var(--green)">+ Reforço</strong> · sai do estoque, entra no saldo`;
+    else if(tl==='folheacao_consumo') det=`<strong style="color:var(--orange)">− Consumo</strong> · sai apenas do saldo`;
+    else if(tl==='folheacao') det=`<span style="color:var(--text3)">Folheação (legado)</span>`;
     else det=ti.label;
     const camStr=(l.camada&&l.camada!=='—')?`<span style="color:var(--text3);font-size:11px"> cam:${l.camada}</span>`:'';
     const pesoStr=parseFloat(l.peso_g||0)>0?fmtPeso(parseFloat(l.peso_g||0)):'—';
+    const consColor = l._isFol
+      ? (l.tipo_lancamento==='folheacao_reforco' ? 'var(--green)' : 'var(--orange)')
+      : (l.metal==='Ouro' ? 'var(--gold-dark)' : 'var(--silver-dark)');
+    const acoes = l._isFol
+      ? (!l.fechado ? `<button class="btn bd bsm bic" onclick="delFol('${l._foId}')" title="Excluir">🗑️</button>` : '—')
+      : (!l.fechado ? `<button class="btn bs bsm bic" onclick="editarLan('${l.id}')" title="Editar">✏️</button> <button class="btn bd bsm bic" onclick="delLan('${l.id}')" title="Excluir">🗑️</button>` : '—');
     return `<tr style="${l.fechado?'opacity:.5':''}">
       <td style="white-space:nowrap">${fmtDate(dt)}${l.fechado?' <span class="badge bg-red" style="font-size:9px">FEC</span>':''}</td>
       <td><span class="badge ${ti.badge}">${ti.label}</span></td>
       <td><span class="badge ${l.metal==='Ouro'?'bg-gold':'bg-silver'}">${l.metal}</span></td>
       <td style="font-size:12px">${det}${camStr}</td>
       <td class="tr">${pesoStr}</td>
-      <td class="tr" style="font-weight:700;color:${l.metal==='Ouro'?'var(--gold-dark)':'var(--silver-dark)'}">${c.toFixed(4)}</td>
+      <td class="tr" style="font-weight:700;color:${consColor}">${c.toFixed(4)}</td>
       <td style="font-size:11px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis">${l.obs||'—'}</td>
-      <td style="white-space:nowrap">${!l.fechado?`<button class="btn bs bsm bic" onclick="editarLan('${l.id}')" title="Editar">✏️</button> <button class="btn bd bsm bic" onclick="delLan('${l.id}')" title="Excluir">🗑️</button>`:'—'}</td>
+      <td style="white-space:nowrap">${acoes}</td>
     </tr>`;
   }).join('');
 
-  document.getElementById('lan-tot').innerHTML=`<strong>${data.length}</strong> registros | Ouro: <strong class="tg">${tO.toFixed(4)} g</strong> | Prata: <strong class="ts">${tP.toFixed(4)} g</strong>`;
+  const extras = (tFolRef||tFolCon) ? ` | Fol. Reforço: <strong style="color:var(--green)">${tFolRef.toFixed(4)} g</strong> | Fol. Consumo: <strong style="color:var(--orange)">${tFolCon.toFixed(4)} g</strong>` : '';
+  document.getElementById('lan-tot').innerHTML=`<strong>${data.length}</strong> registros | Ouro (operacional): <strong class="tg">${tO.toFixed(4)} g</strong> | Prata: <strong class="ts">${tP.toFixed(4)} g</strong>${extras}`;
 }
 
 /* ============================================================
@@ -1145,8 +1355,15 @@ function calcEst(metal, mesKey) {
   const tc=comp.reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
   const ap=aj.filter(a=>['ajuste_positivo','sobra_reaproveitada'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
   const an=aj.filter(a=>['ajuste_negativo','perda'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
-  const cons=lan.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
-  return {ini,tc,ap,an,cons,est:ini+tc+ap-an-cons};
+  // Consumo operacional do metal — EXCLUI lançamentos de tipo 'folheacao' (legado) e 'folheacao_consumo'
+  // pois esses afetam APENAS o saldo interno da folheação, não o estoque geral.
+  const cons=lan.filter(l=>!['folheacao','folheacao_consumo'].includes(l.tipo_lancamento))
+                .reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+  // Reforços da Folheação SAEM do estoque geral de Ouro (apenas Ouro)
+  const reforcosFol = (metal==='Ouro')
+    ? FOL.filter(f=>f.mes_key===mesKey && f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0)
+    : 0;
+  return {ini,tc,ap,an,cons,reforcosFol,est: ini + tc + ap - an - cons - reforcosFol};
 }
 
 function renderEst() {
@@ -1154,12 +1371,15 @@ function renderEst() {
     const e=calcEst(metal),el=document.getElementById('est-'+metal.toLowerCase()); if(!el) return;
     const perc=(e.ini+e.tc)>0?Math.max(0,Math.min(100,(e.est/(e.ini+e.tc))*100)):0;
     const neg=e.est<0,cc=neg?'tr2':metal==='Ouro'?'tg':'ts',bc=neg?'var(--red)':metal==='Ouro'?'var(--gold)':'var(--silver)';
+    const rowReforco = metal==='Ouro' && e.reforcosFol>0
+      ? `<tr><td style="color:var(--text3)">− Reforços p/ Folheação</td><td class="tr tr2">−${e.reforcosFol.toFixed(4)} g</td></tr>` : '';
     el.innerHTML=`<div class="sbw"><div class="sbl"><span>Estoque Atual</span><span class="${cc}">${e.est.toFixed(4)} g ${neg?'⚠️ NEGATIVO':''}</span></div><div class="sbt"><div class="sbf" style="width:${perc.toFixed(1)}%;background:${bc}"></div></div></div>
     <table style="width:100%;font-size:13px;margin-top:12px">
       <tr><td style="color:var(--text3)">Inicial do mês</td><td class="tr"><strong>${e.ini.toFixed(4)} g</strong></td></tr>
       <tr><td style="color:var(--text3)">+ Compras</td><td class="tr tgr">+${e.tc.toFixed(4)} g</td></tr>
       <tr><td style="color:var(--text3)">+ Ajustes / Sobras</td><td class="tr tgr">+${e.ap.toFixed(4)} g</td></tr>
-      <tr><td style="color:var(--text3)">− Consumo total</td><td class="tr tr2">−${e.cons.toFixed(4)} g</td></tr>
+      <tr><td style="color:var(--text3)">− Consumo operacional</td><td class="tr tr2">−${e.cons.toFixed(4)} g</td></tr>
+      ${rowReforco}
       <tr><td style="color:var(--text3)">− Perdas / Ajustes neg.</td><td class="tr tr2">−${e.an.toFixed(4)} g</td></tr>
       <tr style="border-top:2px solid var(--border);font-weight:700"><td>= Estoque Atual</td><td class="tr ${cc}">${e.est.toFixed(4)} g</td></tr>
     </table>`;
@@ -1178,7 +1398,14 @@ function renderMov() {
   });
   LAN.filter(l=>l.mes_key===mes).forEach(l=>{
     const c=parseFloat(l.consumo_calc||0);
-    if(c>0) movs.push({data:l.datetime_lancamento?.split('T')[0],metal:l.metal,tipo:TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,ent:0,sai:c,obs:l.cor!=='—'?l.cor:''});
+    // Lançamentos de folheação (legado e novo) NÃO entram nas movimentações de estoque geral
+    if(c>0 && !['folheacao','folheacao_consumo'].includes(l.tipo_lancamento)) {
+      movs.push({data:l.datetime_lancamento?.split('T')[0],metal:l.metal,tipo:TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,ent:0,sai:c,obs:l.cor!=='—'?l.cor:''});
+    }
+  });
+  // Reforços da folheação aparecem como saída do estoque geral de Ouro
+  FOL.filter(f=>f.mes_key===mes && f.tipo==='reforco').forEach(f=>{
+    movs.push({data:f.data,metal:'Ouro',tipo:'Reforço Folheação',ent:0,sai:parseFloat(f.quantidade_g||0),obs:f.obs||'sai do estoque, entra no saldo da folheação'});
   });
   movs.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
   if(!movs.length) { tbody.innerHTML=''; document.getElementById('mov-nd').classList.remove('hidden'); return; }
@@ -1190,19 +1417,28 @@ function renderMov() {
    DASHBOARD
 ============================================================ */
 function renderDashboard() {
+  const mes=getMes();
   const eO=calcEst('Ouro'),eP=calcEst('Prata');
-  const lan=LAN.filter(l=>l.mes_key===getMes());
-  const hj=hoje(), lhj=lan.filter(l=>l.datetime_lancamento?.startsWith(hj));
+  const fol=calcFolSaldo(mes);
+  // Lançamentos operacionais (exclui folheação legado/consumo do contador para alinhar com o estoque)
+  const lan=LAN.filter(l=>l.mes_key===mes);
+  const lanOp = lan.filter(l=>!['folheacao','folheacao_consumo'].includes(l.tipo_lancamento));
+  const hj=hoje(), lhj=lanOp.filter(l=>l.datetime_lancamento?.startsWith(hj));
   const cOhj=lhj.filter(l=>l.metal==='Ouro').reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
   const cPhj=lhj.filter(l=>l.metal==='Prata').reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
-  const vO=COMP.filter(c=>c.mes_key===getMes()&&c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
-  const vP=COMP.filter(c=>c.mes_key===getMes()&&c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
+  const vO=COMP.filter(c=>c.mes_key===mes&&c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
+  const vP=COMP.filter(c=>c.mes_key===mes&&c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
+  const folNeg = fol.saldo < 0;
 
   const cards=[
     {l:'Estoque Ouro',v:eO.est.toFixed(4)+' g',s:eO.est<0?'⚠️ NEGATIVO':'Disponível',c:'s-g',vc:eO.est<0?'vr':'vg'},
     {l:'Estoque Prata',v:eP.est.toFixed(4)+' g',s:eP.est<0?'⚠️ NEGATIVO':'Disponível',c:'s-s',vc:eP.est<0?'vr':'vs'},
-    {l:'Consumo Ouro Mês',v:eO.cons.toFixed(4)+' g',s:lan.filter(l=>l.metal==='Ouro').length+' lançamentos',c:'s-g',vc:'vg'},
-    {l:'Consumo Prata Mês',v:eP.cons.toFixed(4)+' g',s:lan.filter(l=>l.metal==='Prata').length+' lançamentos',c:'s-s',vc:'vs'},
+    {l:'Saldo Folheação',v:(fol.saldo>=0?'+':'')+fol.saldo.toFixed(3)+' g',s:folNeg?'⚠️ NEGATIVO':'Conta interna',c:folNeg?'s-r':'s-gr',vc:folNeg?'vr':'vgr'},
+    {l:'Consumo Ouro Mês',v:eO.cons.toFixed(4)+' g',s:lanOp.filter(l=>l.metal==='Ouro').length+' lançamentos',c:'s-g',vc:'vg'},
+    {l:'Consumo Prata Mês',v:eP.cons.toFixed(4)+' g',s:lanOp.filter(l=>l.metal==='Prata').length+' lançamentos',c:'s-s',vc:'vs'},
+    {l:'Reforço Folheação',v:fol.ref.toFixed(3)+' g',s:'No mês',c:'s-gr',vc:'vgr'},
+    {l:'Consumo Folheação',v:fol.con.toFixed(3)+' g',s:'No mês',c:'s-o'},
+    {l:'Diferença Folheação',v:(fol.saldo-fol.ini>=0?'+':'')+(fol.saldo-fol.ini).toFixed(3)+' g',s:'Variação no mês',c:folNeg?'s-r':'s-b',vc:folNeg?'vr':''},
     {l:'Consumo Ouro Hoje',v:cOhj.toFixed(4)+' g',s:lhj.filter(l=>l.metal==='Ouro').length+' lançamentos',c:'s-b'},
     {l:'Consumo Prata Hoje',v:cPhj.toFixed(4)+' g',s:lhj.filter(l=>l.metal==='Prata').length+' lançamentos',c:'s-b'},
     {l:'Compras Ouro',v:eO.tc.toFixed(3)+' g',s:vO>0?'R$ '+vO.toFixed(2):'—',c:'s-g'},
@@ -1210,11 +1446,48 @@ function renderDashboard() {
     {l:'Ouro Inicial',v:eO.ini.toFixed(3)+' g',s:'Mês atual',c:'s-o'},
     {l:'Prata Inicial',v:eP.ini.toFixed(3)+' g',s:'Mês atual',c:'s-o'},
     {l:'Total Lançamentos',v:lan.length.toString(),s:'No mês',c:'s-p'},
-    {l:'Lançamentos Hoje',v:lhj.length.toString(),s:'Hoje',c:'s-p'},
+    {l:'Lançamentos Hoje',v:(lhj.length+FOL.filter(f=>f.data===hj).length).toString(),s:'Hoje',c:'s-p'},
   ];
   document.getElementById('dash-cards').innerHTML=cards.map(c=>`<div class="stat ${c.c}"><div class="slbl">${c.l}</div><div class="sval ${c.vc||''}">${c.v}</div><div class="ssub">${c.s}</div></div>`).join('');
 
-  const det=(e,m)=>`<table style="width:100%;font-size:13px"><tr><td style="color:var(--text3)">Inicial</td><td class="tr">${e.ini.toFixed(4)} g</td></tr><tr><td style="color:var(--text3)">+ Compras</td><td class="tr tgr">+${e.tc.toFixed(4)} g</td></tr><tr><td style="color:var(--text3)">+ Ajustes</td><td class="tr tgr">+${e.ap.toFixed(4)} g</td></tr><tr><td style="color:var(--text3)">− Consumo</td><td class="tr tr2">−${e.cons.toFixed(4)} g</td></tr><tr><td style="color:var(--text3)">− Perdas</td><td class="tr tr2">−${e.an.toFixed(4)} g</td></tr><tr style="border-top:2px solid var(--border);font-weight:700"><td>= Estoque</td><td class="tr ${e.est<0?'tr2':m==='Ouro'?'tg':'ts'}">${e.est.toFixed(4)} g</td></tr></table>`;
+  // Bloco "Folheação - Conta Corrente" (inserido antes dos blocos de movimentação)
+  let folBox = document.getElementById('d-fol-box');
+  if(!folBox) {
+    folBox = document.createElement('div');
+    folBox.id='d-fol-box';
+    folBox.className='card';
+    const dashEl=document.getElementById('dash-cards');
+    dashEl.parentNode.insertBefore(folBox, dashEl.nextSibling);
+  }
+  const folLista = FOL.filter(f=>f.mes_key===mes).slice(0,8);
+  folBox.innerHTML = `
+    <div class="ct">💰 Folheação — Conta Corrente <span style="font-size:10px;font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— saldo interno, independente do estoque geral</span></div>
+    <div class="fo-saldo-box ${folNeg?'neg':''}" style="margin-bottom:14px">
+      <div>
+        <div class="fo-saldo-lbl">Saldo Atual</div>
+        <div class="fo-saldo-val">${(fol.saldo>=0?'+':'')}${fol.saldo.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})} g</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${folNeg?`⚠️ Folheação negativa: faltam ${Math.abs(fol.saldo).toFixed(3)} g de ouro para equilibrar.`:'em equilíbrio'}</div>
+      </div>
+      <div class="fo-mini">
+        <div><div class="fo-mini-lbl">Saldo Inicial</div><div class="fo-mini-val">${fol.ini.toFixed(3)} g</div></div>
+        <div><div class="fo-mini-lbl">Reforços</div><div class="fo-mini-val ref">+${fol.ref.toFixed(3)} g</div></div>
+        <div><div class="fo-mini-lbl">Consumos</div><div class="fo-mini-val con">−${fol.con.toFixed(3)} g</div></div>
+      </div>
+    </div>
+    ${folLista.length ? `<div class="tw"><table>
+      <thead><tr><th>Data</th><th>Tipo</th><th class="tr">Qtd (g)</th><th class="tr">Camada</th><th>Obs</th></tr></thead>
+      <tbody>${folLista.map(f=>`<tr>
+        <td>${fmtDate(f.data)}</td>
+        <td><span class="badge ${f.tipo==='reforco'?'bg-green':'bg-orange'}">${f.tipo==='reforco'?'+ Reforço':'− Consumo'}</span></td>
+        <td class="tr" style="font-weight:700;color:${f.tipo==='reforco'?'var(--green)':'var(--orange)'}">${parseFloat(f.quantidade_g||0).toFixed(4)}</td>
+        <td class="tr">${f.camada||'—'}</td>
+        <td style="font-size:11px;color:var(--text3)">${f.obs||'—'}</td>
+      </tr>`).join('')}</tbody></table></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">Mostrando últimos ${folLista.length} movimentos do mês.</div>`
+    : '<div class="nd">Sem movimentos de folheação neste mês.</div>'}
+  `;
+
+  const det=(e,m)=>`<table style="width:100%;font-size:13px"><tr><td style="color:var(--text3)">Inicial</td><td class="tr">${e.ini.toFixed(4)} g</td></tr><tr><td style="color:var(--text3)">+ Compras</td><td class="tr tgr">+${e.tc.toFixed(4)} g</td></tr><tr><td style="color:var(--text3)">+ Ajustes</td><td class="tr tgr">+${e.ap.toFixed(4)} g</td></tr><tr><td style="color:var(--text3)">− Consumo operacional</td><td class="tr tr2">−${e.cons.toFixed(4)} g</td></tr>${m==='Ouro'&&e.reforcosFol>0?`<tr><td style="color:var(--text3)">− Reforços p/ Folheação</td><td class="tr tr2">−${e.reforcosFol.toFixed(4)} g</td></tr>`:''}<tr><td style="color:var(--text3)">− Perdas</td><td class="tr tr2">−${e.an.toFixed(4)} g</td></tr><tr style="border-top:2px solid var(--border);font-weight:700"><td>= Estoque</td><td class="tr ${e.est<0?'tr2':m==='Ouro'?'tg':'ts'}">${e.est.toFixed(4)} g</td></tr></table>`;
   document.getElementById('d-ouro').innerHTML=det(eO,'Ouro');
   document.getElementById('d-prata').innerHTML=det(eP,'Prata');
 
@@ -1224,14 +1497,21 @@ function renderDashboard() {
   const cL=Object.entries(byCor).sort((a,b)=>b[1]-a[1]), mxC=cL[0]?.[1]||1;
   document.getElementById('d-cor').innerHTML=cL.length?`<ul class="rank">${cL.map(([cor,v],i)=>`<li><div class="rn">${i+1}</div><div style="flex:1"><div style="font-weight:600;font-size:12px">${cor}</div><div class="rb"><div class="rbf" style="width:${(v/mxC*100).toFixed(1)}%;background:var(--gold)"></div></div></div><div class="rv tg">${v.toFixed(4)} g</div></li>`).join('')}</ul>`:'<div class="nd">Sem dados de flash.</div>';
 
-  // Por tipo
+  // Por tipo (inclui FOL reforço/consumo como linhas virtuais)
   const byTipo={};
   lan.forEach(l=>{ const tl=l.tipo_lancamento||'flash'; const c=parseFloat(l.consumo_calc||0); if(!byTipo[tl]) byTipo[tl]={c:0,n:0}; byTipo[tl].c+=c; byTipo[tl].n++; });
+  FOL.filter(f=>f.mes_key===mes).forEach(f=>{
+    const tl = f.tipo==='reforco'?'folheacao_reforco':'folheacao_consumo';
+    if(!byTipo[tl]) byTipo[tl]={c:0,n:0};
+    byTipo[tl].c += parseFloat(f.quantidade_g||0);
+    byTipo[tl].n++;
+  });
   const tL=Object.entries(byTipo).sort((a,b)=>b[1].c-a[1].c), mxT=tL[0]?.[1].c||1;
-  const tcls={'flash':'var(--gold)','folheacao':'var(--gold-dark)','pre_ouro':'var(--orange)','pre_ouro_flash':'var(--orange)','ouro_extra':'var(--red)','montagem_cor':'var(--purple)','prata':'var(--silver)'};
+  const tcls={'flash':'var(--gold)','folheacao':'var(--gold-dark)','folheacao_reforco':'var(--green)','folheacao_consumo':'var(--orange)','pre_ouro':'var(--orange)','pre_ouro_flash':'var(--orange)','ouro_extra':'var(--red)','montagem_cor':'var(--purple)','prata':'var(--silver)'};
   document.getElementById('d-tipo').innerHTML=tL.length?`<ul class="rank">${tL.map(([t,v],i)=>`<li><div class="rn">${i+1}</div><div style="flex:1"><div style="font-weight:600;font-size:12px">${TIPOS[t]?.label||t}</div><div class="rb"><div class="rbf" style="width:${(v.c/mxT*100).toFixed(1)}%;background:${tcls[t]||'var(--blue)'}"></div></div></div><div class="rv">${v.c.toFixed(4)} g<br><span style="font-size:10px;color:var(--text3)">${v.n} lotes</span></div></li>`).join('')}</ul>`:'<div class="nd">Sem dados.</div>';
 
-  drawChart(lan);
+  // gráfico usa apenas consumo operacional de Ouro (não inclui folheação)
+  drawChart(lanOp);
 }
 
 function drawChart(lan) {
@@ -1263,6 +1543,7 @@ function updPer() {
   const p=document.getElementById('r-per').value;
   document.getElementById('r-di').classList.toggle('hidden',p!=='custom');
   document.getElementById('r-df').classList.toggle('hidden',p!=='custom');
+  document.getElementById('r-mes-sel')?.classList.toggle('hidden',p!=='mes-sel');
 }
 
 function getPerDates() {
@@ -1271,6 +1552,12 @@ function getPerDates() {
   else if(p==='semana') { const d=new Date(n); d.setDate(d.getDate()-d.getDay()+(d.getDay()===0?-6:1)); ini=d.toISOString().split('T')[0]; fim=n.toISOString().split('T')[0]; }
   else if(p==='mes') { ini=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-01`; fim=n.toISOString().split('T')[0]; }
   else if(p==='mes-ant') { const d=new Date(n.getFullYear(),n.getMonth()-1,1); ini=d.toISOString().split('T')[0]; fim=new Date(n.getFullYear(),n.getMonth(),0).toISOString().split('T')[0]; }
+  else if(p==='mes-sel') {
+    const mk=document.getElementById('r-mes-sel')?.value||getMes();
+    const [y,m]=mk.split('-').map(Number);
+    ini=`${mk}-01`;
+    fim=new Date(y,m,0).toISOString().split('T')[0];
+  }
   else { ini=document.getElementById('r-di').value; fim=document.getElementById('r-df').value; }
   return {ini,fim};
 }
@@ -1281,13 +1568,24 @@ async function gerarRel() {
   el.innerHTML='<div class="nd">⏳ Carregando relatório...</div>';
 
   try {
+    // Lançamentos operacionais (NÃO inclui folheação legado nem consumo folheação)
     const lanPeriodo = LAN.filter(l=>{
       const d=(l.datetime_lancamento||'').substring(0,10);
-      return (!ini || d>=ini) && (!fim || d<=fim) && (!fm || l.metal===fm);
+      return (!ini || d>=ini) && (!fim || d<=fim) && (!fm || l.metal===fm) && !['folheacao','folheacao_consumo'].includes(l.tipo_lancamento);
     });
     const comprasPeriodo = COMP.filter(c=>{
       const d=(c.data||'').substring(0,10);
       return (!ini || d>=ini) && (!fim || d<=fim) && (!fm || c.metal===fm);
+    });
+    // Movimentos de folheação no período (sempre Ouro)
+    const folPeriodo = FOL.filter(f=>{
+      const d = (f.data||'').substring(0,10);
+      return (!ini || d>=ini) && (!fim || d<=fim) && (!fm || fm==='Ouro');
+    });
+    // Lançamentos antigos de folheacao (legado) também contam como consumo da folheação
+    const folLegadoPeriodo = LAN.filter(l=>{
+      const d=(l.datetime_lancamento||'').substring(0,10);
+      return (!ini || d>=ini) && (!fim || d<=fim) && l.tipo_lancamento==='folheacao' && (!fm || fm==='Ouro');
     });
 
     const groupBy = (rows, keyFn, initFn, addFn)=>{
@@ -1329,7 +1627,40 @@ async function gerarRel() {
     const nLotes=lanPeriodo.length;
     const nDias=fDia.length;
 
+    // FOLHEAÇÃO no período
+    const tFolRef = folPeriodo.filter(f=>f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0);
+    const tFolConNovo = folPeriodo.filter(f=>f.tipo==='consumo').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0);
+    const tFolConLegado = folLegadoPeriodo.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+    const tFolCon = tFolConNovo + tFolConLegado;
+    // Saldo final aproximado: pega o saldo do último mês dentro do período
+    const mesesPeriodo = [...new Set([...folPeriodo.map(f=>f.mes_key), ...folLegadoPeriodo.map(l=>l.mes_key)])].sort();
+    const mesFinal = mesesPeriodo[mesesPeriodo.length-1] || getMes();
+    const folSaldoFinal = calcFolSaldo(mesFinal);
+
     const bar=(v,mx,cor='var(--gold)')=>`<div style="background:var(--border);border-radius:3px;height:5px;flex:1;overflow:hidden"><div style="height:100%;border-radius:3px;background:${cor};width:${mx>0?(v/mx*100).toFixed(1):0}%"></div></div>`;
+
+    // Tabela detalhada de folheação no período
+    const tblFol = ()=>{
+      const movsAll = [
+        ...folPeriodo.map(f=>({data:f.data, tipo:f.tipo, qtd:parseFloat(f.quantidade_g||0), camada:f.camada||'—', obs:f.obs, _src:'novo'})),
+        ...folLegadoPeriodo.map(l=>({data:(l.datetime_lancamento||'').substring(0,10), tipo:'consumo', qtd:parseFloat(l.consumo_calc||0), camada:l.camada||'—', obs:(l.obs||'')+' (legado)', _src:'legado'}))
+      ].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+      if(!movsAll.length) return '<div class="nd">Sem movimentos de folheação no período.</div>';
+      return `<div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th class="tr">Qtd (g)</th><th class="tr">Camada</th><th>Obs</th></tr></thead><tbody>
+        ${movsAll.map(m=>`<tr>
+          <td>${fmtDate(m.data)}</td>
+          <td><span class="badge ${m.tipo==='reforco'?'bg-green':'bg-orange'}">${m.tipo==='reforco'?'+ Reforço':'− Consumo'}</span></td>
+          <td class="tr" style="font-weight:700;color:${m.tipo==='reforco'?'var(--green)':'var(--orange)'}">${m.qtd.toFixed(4)}</td>
+          <td class="tr" style="font-size:11px;color:var(--text3)">${m.camada}</td>
+          <td style="font-size:11px;color:var(--text3)">${m.obs||'—'}</td>
+        </tr>`).join('')}
+        <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc">
+          <td colspan="2">TOTAIS</td>
+          <td class="tr"><span class="tgr">+${tFolRef.toFixed(4)}</span> / <span style="color:var(--orange)">−${tFolCon.toFixed(4)}</span></td>
+          <td colspan="2" class="tr">Saldo final (${fmtMes(mesFinal)}): <strong class="${folSaldoFinal.saldo<0?'tr2':'tgr'}">${folSaldoFinal.saldo.toFixed(4)} g</strong></td>
+        </tr>
+      </tbody></table></div>`;
+    };
 
     const tblCor=()=>{
       if(!fCor.length) return '<div class="nd">Sem dados de flash.</div>';
@@ -1451,9 +1782,16 @@ async function gerarRel() {
         <div class="stat s-gr"><div class="slbl">Estoque Ouro</div><div class="sval ${estO<0?'vr':'vg'}">${estO.toFixed(4)} g</div><div class="ssub">${estO<0?'⚠️ Negativo':'Disponível'}</div></div>
         <div class="stat s-${estP<0?'r':'s'}"><div class="slbl">Estoque Prata</div><div class="sval ${estP<0?'vr':'vs'}">${estP.toFixed(4)} g</div><div class="ssub">${estP<0?'⚠️ Negativo':'Disponível'}</div></div>
         ${tValO>0&&tCompO>0?`<div class="stat s-o"><div class="slbl">Custo Médio Ouro</div><div class="sval">R$ ${(tValO/tCompO).toFixed(2)}/g</div></div>`:''}
+        <div class="stat s-gr"><div class="slbl">Reforços Folheação</div><div class="sval vgr">+${tFolRef.toFixed(3)} g</div><div class="ssub">no período</div></div>
+        <div class="stat s-o"><div class="slbl">Consumo Folheação</div><div class="sval">−${tFolCon.toFixed(3)} g</div><div class="ssub">${tFolConLegado>0?`inclui ${tFolConLegado.toFixed(3)} g legado`:'no período'}</div></div>
+        <div class="stat ${folSaldoFinal.saldo<0?'s-r':'s-gr'}"><div class="slbl">Saldo Folheação</div><div class="sval ${folSaldoFinal.saldo<0?'vr':'vgr'}">${folSaldoFinal.saldo.toFixed(3)} g</div><div class="ssub">${folSaldoFinal.saldo<0?'⚠️ negativo':'fim '+fmtMes(mesFinal)}</div></div>
         <div class="stat s-p"><div class="slbl">Total Lançamentos</div><div class="sval">${nLotes}</div><div class="ssub">${nDias} dias</div></div>
         ${nDias>0?`<div class="stat s-p"><div class="slbl">Média Diária Ouro</div><div class="sval">${(tO/nDias).toFixed(4)} g</div><div class="ssub">por dia</div></div>`:''}
       </div>
+    </div>
+    <div class="card">
+      <div class="ct">💰 Folheação — Conta Corrente no Período</div>
+      ${tblFol()}
     </div>
     <div class="card"><div class="ct">🎨 Flash — Por Cor</div>${tblCor()}</div>
     <div class="card"><div class="ct">🎨 Flash — Cor × Camada</div>${tblCorCam()}</div>
@@ -1476,15 +1814,22 @@ async function gerarRel() {
 function expCSV() {
   const {ini,fim}=getPerDates();
   let lan=LAN.filter(l=>{ const d=l.datetime_lancamento?.split('T')[0]; return(!ini||d>=ini)&&(!fim||d<=fim); });
+  let fol=FOL.filter(f=>{ const d=(f.data||'').substring(0,10); return(!ini||d>=ini)&&(!fim||d<=fim); });
   const h=['Data','Tipo','Metal','Cor/Destino','Camada','Peso (kg)','Consumo(g)','Mês','Obs'];
-  const rows=lan.map(l=>[l.datetime_lancamento?.split('T')[0],TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,l.metal,l.cor,l.camada,l.peso_g||'',l.consumo_calc||'',l.mes_key,l.obs||'']);
+  const rows=[
+    ...lan.map(l=>[l.datetime_lancamento?.split('T')[0],TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,l.metal,l.cor,l.camada,l.peso_g||'',l.consumo_calc||'',l.mes_key,l.obs||'']),
+    ...fol.map(f=>[f.data,f.tipo==='reforco'?'Fol. Reforço':'Fol. Consumo','Ouro','—',f.camada||'—',f.peso_kg||'',f.quantidade_g||'',f.mes_key,f.obs||''])
+  ];
   dlFile(`metais_${ini}_${fim}.csv`,[h,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'text/csv');
   toast('CSV exportado!');
 }
 
 function expCSVAll() {
   const h=['Data','Tipo','Metal','Cor','Camada','Peso (kg)','Consumo(g)','Mês','Obs'];
-  const rows=LAN.map(l=>[l.datetime_lancamento?.split('T')[0],TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,l.metal,l.cor,l.camada,l.peso_g||'',l.consumo_calc||'',l.mes_key,l.obs||'']);
+  const rows=[
+    ...LAN.map(l=>[l.datetime_lancamento?.split('T')[0],TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,l.metal,l.cor,l.camada,l.peso_g||'',l.consumo_calc||'',l.mes_key,l.obs||'']),
+    ...FOL.map(f=>[f.data,f.tipo==='reforco'?'Fol. Reforço':'Fol. Consumo','Ouro','—',f.camada||'—',f.peso_kg||'',f.quantidade_g||'',f.mes_key,f.obs||''])
+  ];
   dlFile(`metais_completo_${hoje()}.csv`,[h,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'text/csv');
   toast('CSV completo exportado!');
 }
@@ -1494,42 +1839,101 @@ function expCSVAll() {
 ============================================================ */
 function renderFech() {
   const el=document.getElementById('meses-lista'); if(!el) return;
-  if(!MESES.length) { el.innerHTML='<div class="nd">Nenhum mês registrado.</div>'; return; }
-  el.innerHTML=MESES.map(m=>{
-    const eO=calcEst('Ouro',m.mes_key), eP=calcEst('Prata',m.mes_key);
-    const lanMes=LAN.filter(l=>l.mes_key===m.mes_key).length;
-    return `<div class="mes-card">
-      <div>
-        <div class="mes-card-title">${fmtMes(m.mes_key)} ${m.mes_key===getMes()?'<span class="tag" style="background:var(--green-light);color:var(--green)">Atual</span>':''}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${lanMes} lançamentos</div>
+  // Constrói lista de meses agregando MESES + meses presentes em LAN/COMP/AJ/FOL
+  const allKeys = getAllMeses(); // já ordenado desc
+  if(!allKeys.length) { el.innerHTML='<div class="nd">Nenhum mês registrado.</div>'; return; }
+
+  el.innerHTML = allKeys.map(mk=>{
+    const m = MESES.find(x=>x.mes_key===mk) || {mes_key:mk,status:'aberto'};
+    const eO=calcEst('Ouro',mk), eP=calcEst('Prata',mk);
+    const fol=calcFolSaldo(mk);
+    const lanMes=LAN.filter(l=>l.mes_key===mk).length;
+    const folMes=FOL.filter(f=>f.mes_key===mk).length;
+    const isAtual = mk===getMes();
+    const folNeg = fol.saldo<0;
+
+    return `<div class="card" style="padding:14px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px">
+        <div>
+          <div style="font-weight:800;font-size:15px">${fmtMes(mk)} ${isAtual?'<span class="tag" style="background:var(--green-light);color:var(--green)">Atual</span>':''}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${lanMes} lançamentos · ${folMes} mov. folheação</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="${m.status==='fechado'?'closed-b':'open-b'}">${m.status==='fechado'?'🔒 Fechado':'🟢 Aberto'}</span>
+          ${m.fechado_em?`<span style="font-size:11px;color:var(--text3)">${m.fechado_em.substring(0,10)}</span>`:''}
+        </div>
       </div>
-      <div class="mes-card-vals">
-        <div><div style="font-size:10px;color:var(--text3)">Ouro</div><div class="tg" style="font-weight:700;font-size:13px">${eO.est.toFixed(3)} g</div></div>
-        <div><div style="font-size:10px;color:var(--text3)">Prata</div><div class="ts" style="font-weight:700;font-size:13px">${eP.est.toFixed(3)} g</div></div>
-        <div><span class="${m.status==='fechado'?'closed-b':'open-b'}">${m.status==='fechado'?'🔒 Fechado':'🟢 Aberto'}</span></div>
-        ${m.fechado_em?`<div style="font-size:11px;color:var(--text3)">${m.fechado_em.substring(0,10)}</div>`:''}
+      <div class="three">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--gold-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🥇 Ouro</div>
+          <table style="width:100%;font-size:12px">
+            <tr><td style="color:var(--text3)">Inicial</td><td class="tr">${eO.ini.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">+ Compras</td><td class="tr tgr">+${eO.tc.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">+ Ajustes</td><td class="tr tgr">+${eO.ap.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">− Consumo oper.</td><td class="tr tr2">−${eO.cons.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">− Reforço Folh.</td><td class="tr tr2">−${eO.reforcosFol.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">− Ajustes/Perdas</td><td class="tr tr2">−${eO.an.toFixed(3)} g</td></tr>
+            <tr style="border-top:1px solid var(--border);font-weight:700"><td>Final</td><td class="tr ${eO.est<0?'tr2':'tg'}">${eO.est.toFixed(3)} g</td></tr>
+          </table>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--silver-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🥈 Prata</div>
+          <table style="width:100%;font-size:12px">
+            <tr><td style="color:var(--text3)">Inicial</td><td class="tr">${eP.ini.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">+ Compras</td><td class="tr tgr">+${eP.tc.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">+ Ajustes</td><td class="tr tgr">+${eP.ap.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">− Consumo</td><td class="tr tr2">−${eP.cons.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">− Ajustes/Perdas</td><td class="tr tr2">−${eP.an.toFixed(3)} g</td></tr>
+            <tr style="border-top:1px solid var(--border);font-weight:700"><td>Final</td><td class="tr ${eP.est<0?'tr2':'ts'}">${eP.est.toFixed(3)} g</td></tr>
+          </table>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:${folNeg?'var(--red)':'var(--green)'};text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">💰 Folheação</div>
+          <table style="width:100%;font-size:12px">
+            <tr><td style="color:var(--text3)">Saldo inicial</td><td class="tr">${fol.ini.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">+ Reforços</td><td class="tr tgr">+${fol.ref.toFixed(3)} g</td></tr>
+            <tr><td style="color:var(--text3)">− Consumos</td><td class="tr" style="color:var(--orange)">−${fol.con.toFixed(3)} g</td></tr>
+            <tr style="border-top:1px solid var(--border);font-weight:700"><td>Saldo final</td><td class="tr ${folNeg?'tr2':'tgr'}">${fol.saldo.toFixed(3)} g</td></tr>
+            ${folNeg?`<tr><td colspan="2" style="font-size:10px;color:var(--red);padding-top:6px">⚠️ Negativa</td></tr>`:''}
+          </table>
+        </div>
       </div>
     </div>`;
   }).join('');
 }
 
 async function fecharMes() {
-  const nO=parseFloat(document.getElementById('fm-ouro').value),nP=parseFloat(document.getElementById('fm-prata').value);
+  const nO=parseFloat(document.getElementById('fm-ouro').value),nP=parseFloat(document.getElementById('fm-prata').value),nF=parseFloat(document.getElementById('fm-folheacao').value);
   if(!confirm('Confirma o fechamento do mês? Os lançamentos serão travados.')) return;
-  const mes=getMes(), eO=calcEst('Ouro'), eP=calcEst('Prata');
-  // Se deixou em branco, usa estoque calculado
-  const oI=isNaN(nO)?eO.est:nO, pI=isNaN(nP)?eP.est:nP;
+  const mes=getMes(), eO=calcEst('Ouro'), eP=calcEst('Prata'), fol=calcFolSaldo(mes);
+  // Se deixou em branco, usa o valor final calculado automaticamente
+  const oI=isNaN(nO)?eO.est:nO, pI=isNaN(nP)?eP.est:nP, fI=isNaN(nF)?fol.saldo:nF;
   try {
     setSt('load','⏳ Fechando...');
-    await db.pw('metais_meses','mes_key=eq.'+mes,{status:'fechado',ouro_final:eO.est,prata_final:eP.est,fechado_em:new Date().toISOString()});
+    // Salva valores finais no mês atual (folheacao_final só se a coluna existir; se falhar, segue)
+    try {
+      await db.pw('metais_meses','mes_key=eq.'+mes,{status:'fechado',ouro_final:eO.est,prata_final:eP.est,folheacao_final:fol.saldo,fechado_em:new Date().toISOString()});
+    } catch(e) {
+      // Fallback se a coluna folheacao_final ainda não foi criada
+      await db.pw('metais_meses','mes_key=eq.'+mes,{status:'fechado',ouro_final:eO.est,prata_final:eP.est,fechado_em:new Date().toISOString()});
+    }
     await db.pw('metais_lancamentos','mes_key=eq.'+mes,{fechado:true});
+    // Marca movimentos de folheação do mês como fechados (best-effort)
+    try { await db.pw('metais_folheacao_movimentos','mes_key=eq.'+mes,{fechado:true}); } catch(e){}
     const prox=nextMes(mes);
-    if(!CFG.ouro_inicial) CFG.ouro_inicial={}; if(!CFG.prata_inicial) CFG.prata_inicial={};
-    CFG.ouro_inicial[prox]=oI; CFG.prata_inicial[prox]=pI;
-    await db.cfg('ouro_inicial',CFG.ouro_inicial); await db.cfg('prata_inicial',CFG.prata_inicial);
-    await db.post('metais_meses',{mes_key:prox,status:'aberto',ouro_inicial:oI,prata_inicial:pI});
+    if(!CFG.ouro_inicial) CFG.ouro_inicial={}; if(!CFG.prata_inicial) CFG.prata_inicial={}; if(!CFG.folheacao_inicial) CFG.folheacao_inicial={};
+    CFG.ouro_inicial[prox]=oI; CFG.prata_inicial[prox]=pI; CFG.folheacao_inicial[prox]=fI;
+    await db.cfg('ouro_inicial',CFG.ouro_inicial);
+    await db.cfg('prata_inicial',CFG.prata_inicial);
+    await db.cfg('folheacao_inicial',CFG.folheacao_inicial);
+    try {
+      await db.post('metais_meses',{mes_key:prox,status:'aberto',ouro_inicial:oI,prata_inicial:pI,folheacao_inicial:fI});
+    } catch(e) {
+      await db.post('metais_meses',{mes_key:prox,status:'aberto',ouro_inicial:oI,prata_inicial:pI});
+    }
     await loadData(); setSt('ok','✓ Online');
     document.getElementById('mes-label').textContent=fmtMes(prox);
+    populateMesSel();
     renderFech(); renderDashboard(); checkAlerts();
     toast(`Mês ${fmtMes(mes)} fechado! Iniciando ${fmtMes(prox)}.`);
   } catch(e) { setSt('err','✗ Erro'); toast('Erro: '+e.message,'error'); }
@@ -1547,6 +1951,7 @@ function renderCfg() {
   const mes=getMes();
   document.getElementById('cfg-oi').value=CFG.ouro_inicial?.[mes]||'';
   document.getElementById('cfg-pi').value=CFG.prata_inicial?.[mes]||'';
+  const fi=document.getElementById('cfg-fi'); if(fi) fi.value=CFG.folheacao_inicial?.[mes]||'';
   populateSels();
 }
 
@@ -1577,12 +1982,22 @@ async function remCfg(key, idx) {
 
 async function salvarIniciais() {
   const mes=getMes();
-  if(!CFG.ouro_inicial) CFG.ouro_inicial={}; if(!CFG.prata_inicial) CFG.prata_inicial={};
+  if(!CFG.ouro_inicial) CFG.ouro_inicial={};
+  if(!CFG.prata_inicial) CFG.prata_inicial={};
+  if(!CFG.folheacao_inicial) CFG.folheacao_inicial={};
   CFG.ouro_inicial[mes]=parseFloat(document.getElementById('cfg-oi').value)||0;
   CFG.prata_inicial[mes]=parseFloat(document.getElementById('cfg-pi').value)||0;
+  const fi=document.getElementById('cfg-fi');
+  CFG.folheacao_inicial[mes]=parseFloat(fi?.value)||0;
   await db.cfg('ouro_inicial',CFG.ouro_inicial);
   await db.cfg('prata_inicial',CFG.prata_inicial);
-  await db.pw('metais_meses','mes_key=eq.'+mes,{ouro_inicial:CFG.ouro_inicial[mes],prata_inicial:CFG.prata_inicial[mes]});
+  await db.cfg('folheacao_inicial',CFG.folheacao_inicial);
+  // Tenta gravar folheacao_inicial em metais_meses; se a coluna não existir, ignora
+  try {
+    await db.pw('metais_meses','mes_key=eq.'+mes,{ouro_inicial:CFG.ouro_inicial[mes],prata_inicial:CFG.prata_inicial[mes],folheacao_inicial:CFG.folheacao_inicial[mes]});
+  } catch(e) {
+    await db.pw('metais_meses','mes_key=eq.'+mes,{ouro_inicial:CFG.ouro_inicial[mes],prata_inicial:CFG.prata_inicial[mes]});
+  }
   renderDashboard(); checkAlerts(); toast('Iniciais salvos!');
 }
 
@@ -1591,9 +2006,10 @@ async function salvarIniciais() {
 ============================================================ */
 function checkAlerts() {
   const el=document.getElementById('alerts'); if(!el) return;
-  const a=[], eO=calcEst('Ouro'), eP=calcEst('Prata');
+  const a=[], eO=calcEst('Ouro'), eP=calcEst('Prata'), fol=calcFolSaldo(getMes());
   if(eO.est<0) a.push({t:'al-d',m:`⚠️ Estoque de Ouro NEGATIVO: ${eO.est.toFixed(4)} g`});
   if(eP.est<0) a.push({t:'al-d',m:`⚠️ Estoque de Prata NEGATIVO: ${eP.est.toFixed(4)} g`});
+  if(fol.saldo<0) a.push({t:'al-d',m:`⚠️ Folheação negativa: faltam ${Math.abs(fol.saldo).toFixed(3)} g de ouro para equilibrar.`});
   if(eO.est>=0&&eO.est<2) a.push({t:'al-w',m:`⚡ Estoque de Ouro baixo: ${eO.est.toFixed(4)} g`});
   if(eP.est>=0&&eP.est<5) a.push({t:'al-w',m:`⚡ Estoque de Prata baixo: ${eP.est.toFixed(4)} g`});
   el.innerHTML=a.map(x=>`<div class="alert ${x.t}">${x.m}</div>`).join('');
