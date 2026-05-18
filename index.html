@@ -562,6 +562,24 @@ td{padding:8px 12px;vertical-align:middle}
       <input type="hidden" id="c-eid">
     </div>
   </div>
+  <div class="fbar">
+    <span class="flbl">Período:</span>
+    <select id="comp-per" onchange="renderComp()">
+      <option value="hoje">Hoje</option>
+      <option value="semana">Esta Semana</option>
+      <option value="mes" selected>Este Mês</option>
+      <option value="mes-sel">Mês específico…</option>
+      <option value="tudo">Todo o histórico</option>
+    </select>
+    <select id="comp-mes-sel" class="hidden" onchange="renderComp()"></select>
+    <select id="comp-metal" onchange="renderComp()">
+      <option value="">Ouro + Prata</option>
+      <option value="Ouro">Ouro</option>
+      <option value="Prata">Prata</option>
+    </select>
+    <input type="text" id="comp-busca" placeholder="Buscar fornecedor/obs..." onkeyup="renderComp()">
+    <button class="btn bs bsm" onclick="limparFiltrosComp()">Limpar</button>
+  </div>
   <div class="tw mt12">
     <table>
       <thead><tr><th>Data</th><th>Metal</th><th>Fornecedor</th><th class="tr">Qtd (g)</th><th class="tr">R$/g</th><th class="tr">Total R$</th><th>Obs</th><th>Ações</th></tr></thead>
@@ -579,6 +597,15 @@ td{padding:8px 12px;vertical-align:middle}
   <div class="sh">
     <div class="sh-t">🏭 Estoque</div>
     <button class="btn bp bsm" onclick="openAj()">+ Ajuste Manual</button>
+  </div>
+  <div class="fbar">
+    <span class="flbl">Período:</span>
+    <select id="est-per" onchange="renderEst()">
+      <option value="mes" selected>Este Mês</option>
+      <option value="mes-sel">Mês específico…</option>
+      <option value="tudo">Todo o histórico</option>
+    </select>
+    <select id="est-mes-sel" class="hidden" onchange="renderEst()"></select>
   </div>
   <div class="two">
     <div class="card"><div class="ct">🥇 Ouro</div><div id="est-ouro"></div></div>
@@ -606,7 +633,7 @@ td{padding:8px 12px;vertical-align:middle}
     </div>
   </div>
   <div class="card mt12">
-    <div class="ct">📋 Movimentações do Mês</div>
+    <div class="ct" id="mov-title">📋 Movimentações do Mês</div>
     <div class="tw">
       <table>
         <thead><tr><th>Data</th><th>Metal</th><th>Tipo</th><th class="tr">Entrada (g)</th><th class="tr">Saída (g)</th><th>Obs</th></tr></thead>
@@ -928,13 +955,69 @@ function getAllMeses() {
 
 function populateMesSel() {
   const all = getAllMeses();
-  ['f-mes-sel','r-mes-sel'].forEach(id=>{
+  ['f-mes-sel','r-mes-sel','comp-mes-sel','est-mes-sel'].forEach(id=>{
     const sel=document.getElementById(id); if(!sel) return;
     const prev = sel.value;
     sel.innerHTML='';
     all.forEach(k=>sel.appendChild(new Option(fmtMes(k),k)));
     sel.value = prev || getMes();
   });
+}
+
+function getDateOnly(v) {
+  return v ? String(v).substring(0,10) : '';
+}
+
+function getMesFromDate(v) {
+  const d=getDateOnly(v);
+  return d && d.length>=7 ? d.substring(0,7) : '';
+}
+
+function getRowMes(row, dateField) {
+  return getMesFromDate(row?.[dateField]) || row?.mes_key || '';
+}
+
+function isSemanaAtual(dstr) {
+  const d=getDateOnly(dstr);
+  if(!d) return false;
+  const dt=new Date(d+'T00:00:00');
+  const now=new Date();
+  const start=new Date(now);
+  const day=(start.getDay()+6)%7; // segunda-feira como início
+  start.setHours(0,0,0,0);
+  start.setDate(start.getDate()-day);
+  const end=new Date(start);
+  end.setDate(start.getDate()+6);
+  end.setHours(23,59,59,999);
+  return dt>=start && dt<=end;
+}
+
+function matchPeriodo(row, dateField, periodo, mesSelecionado) {
+  const d=getDateOnly(row?.[dateField]);
+  const rm=getRowMes(row,dateField);
+  if(periodo==='tudo') return true;
+  if(periodo==='hoje') return d===hoje();
+  if(periodo==='semana') return isSemanaAtual(d);
+  if(periodo==='mes') return rm===getMes();
+  if(periodo==='mes-sel') return rm===(mesSelecionado||getMes());
+  return true;
+}
+
+function getEstFiltro() {
+  const per=document.getElementById('est-per')?.value || 'mes';
+  const sel=document.getElementById('est-mes-sel');
+  if(sel) sel.classList.toggle('hidden', per!=='mes-sel');
+  const mes=per==='mes-sel' ? (sel?.value||getMes()) : getMes();
+  const label=per==='tudo' ? 'Todo o histórico' : (per==='mes-sel' ? fmtMes(mes) : 'Mês atual');
+  return {per,mes,label};
+}
+
+function limparFiltrosComp() {
+  const per=document.getElementById('comp-per'); if(per) per.value='mes';
+  const mes=document.getElementById('comp-mes-sel'); if(mes) mes.value=getMes();
+  const metal=document.getElementById('comp-metal'); if(metal) metal.value='';
+  const busca=document.getElementById('comp-busca'); if(busca) busca.value='';
+  renderComp();
 }
 
 /* ============================================================
@@ -1308,18 +1391,38 @@ async function delComp(id) {
   catch(e) { toast('Erro: '+e.message,'error'); }
 }
 
+function getComprasFiltradas() {
+  const per=document.getElementById('comp-per')?.value || 'mes';
+  const mesSel=document.getElementById('comp-mes-sel')?.value || getMes();
+  const metal=document.getElementById('comp-metal')?.value || '';
+  const busca=(document.getElementById('comp-busca')?.value || '').trim().toLowerCase();
+  const sel=document.getElementById('comp-mes-sel');
+  if(sel) sel.classList.toggle('hidden', per!=='mes-sel');
+
+  return COMP.filter(c=>{
+    if(!matchPeriodo(c,'data',per,mesSel)) return false;
+    if(metal && c.metal!==metal) return false;
+    if(busca) {
+      const txt=[c.fornecedor,c.obs,c.metal,c.data].filter(Boolean).join(' ').toLowerCase();
+      if(!txt.includes(busca)) return false;
+    }
+    return true;
+  }).sort((a,b)=>(getDateOnly(b.data)||'').localeCompare(getDateOnly(a.data)||''));
+}
+
 function renderComp() {
   const tbody=document.getElementById('tb-comp'); if(!tbody) return;
-  const data=COMP.filter(c=>c.mes_key===getMes());
-  if(!data.length) { tbody.innerHTML=''; document.getElementById('comp-nd').classList.remove('hidden'); document.getElementById('comp-tot').textContent=''; return; }
-  document.getElementById('comp-nd').classList.add('hidden');
+  const data=getComprasFiltradas();
+  const nd=document.getElementById('comp-nd'), tot=document.getElementById('comp-tot');
+  if(!data.length) { tbody.innerHTML=''; nd?.classList.remove('hidden'); if(tot) tot.textContent=''; return; }
+  nd?.classList.add('hidden');
   let tO=0,tP=0,vO=0,vP=0;
   tbody.innerHTML=data.map(c=>{
     const q=parseFloat(c.qtd_g||0),v=parseFloat(c.valor_rs||0),rg=q>0&&v>0?(v/q):0;
     if(c.metal==='Ouro'){tO+=q;vO+=v;}else{tP+=q;vP+=v;}
     return `<tr><td>${fmtDate(c.data)}</td><td><span class="badge ${c.metal==='Ouro'?'bg-gold':'bg-silver'}">${c.metal}</span></td><td>${c.fornecedor||'—'}</td><td class="tr">${q.toFixed(3)}</td><td class="tr">${rg>0?'R$ '+rg.toFixed(2):'—'}</td><td class="tr">${v>0?'R$ '+v.toFixed(2):'—'}</td><td style="font-size:11px;color:var(--text3)">${c.obs||'—'}</td><td><button class="btn bs bsm bic" onclick="editComp('${c.id}')">✏️</button> <button class="btn bd bsm bic" onclick="delComp('${c.id}')">🗑️</button></td></tr>`;
   }).join('');
-  document.getElementById('comp-tot').innerHTML=`Ouro: <strong class="tg">${tO.toFixed(3)} g</strong>${vO>0?' / R$ '+vO.toFixed(2):''} | Prata: <strong class="ts">${tP.toFixed(3)} g</strong>${vP>0?' / R$ '+vP.toFixed(2):''}`;
+  if(tot) tot.innerHTML=`${data.length} compra${data.length!==1?'s':''} encontrada${data.length!==1?'s':''} · Ouro: <strong class="tg">${tO.toFixed(3)} g</strong>${vO>0?' / R$ '+vO.toFixed(2):''} · Prata: <strong class="ts">${tP.toFixed(3)} g</strong>${vP>0?' / R$ '+vP.toFixed(2):''} · Total: <strong>R$ ${(vO+vP).toFixed(2)}</strong>`;
 }
 
 /* ============================================================
@@ -1333,7 +1436,7 @@ async function salvarAj() {
   if(!data||!metal||!qtd) { toast('Preencha todos os campos.','error'); return; }
   try {
     setSt('load','⏳');
-    const r=await db.post('metais_ajustes',{mes_key:getMes(),data,metal,tipo,qtd_g:qtd,obs:document.getElementById('a-obs').value||null});
+    const r=await db.post('metais_ajustes',{mes_key:getMesFromDate(data)||getMes(),data,metal,tipo,qtd_g:qtd,obs:document.getElementById('a-obs').value||null});
     AJ.unshift(r[0]); setSt('ok','✓ Online');
     document.getElementById('form-aj').classList.add('hidden');
     renderEst(); renderDashboard(); checkAlerts(); toast('Ajuste salvo!');
@@ -1345,9 +1448,9 @@ async function salvarAj() {
 ============================================================ */
 function calcEst(metal, mesKey) {
   mesKey=mesKey||getMes();
-  const lan=LAN.filter(l=>l.mes_key===mesKey&&l.metal===metal);
-  const comp=COMP.filter(c=>c.mes_key===mesKey&&c.metal===metal);
-  const aj=AJ.filter(a=>a.mes_key===mesKey&&a.metal===metal);
+  const lan=LAN.filter(l=>(getRowMes(l,'datetime_lancamento')===mesKey)&&l.metal===metal);
+  const comp=COMP.filter(c=>(getRowMes(c,'data')===mesKey)&&c.metal===metal);
+  const aj=AJ.filter(a=>(getRowMes(a,'data')===mesKey)&&a.metal===metal);
   const mdb=MESES.find(m=>m.mes_key===mesKey);
   const ini=metal==='Ouro'
     ?(parseFloat(CFG.ouro_inicial?.[mesKey])||parseFloat(mdb?.ouro_inicial)||0)
@@ -1361,27 +1464,55 @@ function calcEst(metal, mesKey) {
                 .reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
   // Reforços da Folheação SAEM do estoque geral de Ouro (apenas Ouro)
   const reforcosFol = (metal==='Ouro')
-    ? FOL.filter(f=>f.mes_key===mesKey && f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0)
+    ? FOL.filter(f=>getRowMes(f,'data')===mesKey && f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0)
     : 0;
   return {ini,tc,ap,an,cons,reforcosFol,est: ini + tc + ap - an - cons - reforcosFol};
 }
 
+function calcEstHistorico(metal) {
+  const meses = getAllMeses().slice().sort();
+  let ini = 0;
+  for(const mk of meses) {
+    const mdb=MESES.find(m=>m.mes_key===mk);
+    const v = metal==='Ouro'
+      ? (parseFloat(CFG.ouro_inicial?.[mk])||parseFloat(mdb?.ouro_inicial)||0)
+      : (parseFloat(CFG.prata_inicial?.[mk])||parseFloat(mdb?.prata_inicial)||0);
+    if(v) { ini=v; break; }
+  }
+  const tc=COMP.filter(c=>c.metal===metal).reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
+  const aj=AJ.filter(a=>a.metal===metal);
+  const ap=aj.filter(a=>['ajuste_positivo','sobra_reaproveitada'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
+  const an=aj.filter(a=>['ajuste_negativo','perda'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
+  const cons=LAN.filter(l=>l.metal===metal && !['folheacao','folheacao_consumo'].includes(l.tipo_lancamento))
+                .reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+  const reforcosFol = metal==='Ouro'
+    ? FOL.filter(f=>f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0)
+    : 0;
+  return {ini,tc,ap,an,cons,reforcosFol,est: ini + tc + ap - an - cons - reforcosFol, historico:true};
+}
+
 function renderEst() {
+  const filtro=getEstFiltro();
   ['Ouro','Prata'].forEach(metal=>{
-    const e=calcEst(metal),el=document.getElementById('est-'+metal.toLowerCase()); if(!el) return;
-    const perc=(e.ini+e.tc)>0?Math.max(0,Math.min(100,(e.est/(e.ini+e.tc))*100)):0;
+    const e=filtro.per==='tudo' ? calcEstHistorico(metal) : calcEst(metal,filtro.mes);
+    const el=document.getElementById('est-'+metal.toLowerCase()); if(!el) return;
+    const base=(e.ini+e.tc+e.ap)>0?(e.ini+e.tc+e.ap):Math.abs(e.est);
+    const perc=base>0?Math.max(0,Math.min(100,(e.est/base)*100)):0;
     const neg=e.est<0,cc=neg?'tr2':metal==='Ouro'?'tg':'ts',bc=neg?'var(--red)':metal==='Ouro'?'var(--gold)':'var(--silver)';
+    const labelIni=filtro.per==='tudo'?'Inicial base':'Inicial do mês';
+    const labelEst=filtro.per==='tudo'?'Saldo Calculado':'Estoque Atual';
     const rowReforco = metal==='Ouro' && e.reforcosFol>0
       ? `<tr><td style="color:var(--text3)">− Reforços p/ Folheação</td><td class="tr tr2">−${e.reforcosFol.toFixed(4)} g</td></tr>` : '';
-    el.innerHTML=`<div class="sbw"><div class="sbl"><span>Estoque Atual</span><span class="${cc}">${e.est.toFixed(4)} g ${neg?'⚠️ NEGATIVO':''}</span></div><div class="sbt"><div class="sbf" style="width:${perc.toFixed(1)}%;background:${bc}"></div></div></div>
+    el.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:8px">${filtro.label}</div>
+    <div class="sbw"><div class="sbl"><span>${labelEst}</span><span class="${cc}">${e.est.toFixed(4)} g ${neg?'⚠️ NEGATIVO':''}</span></div><div class="sbt"><div class="sbf" style="width:${perc.toFixed(1)}%;background:${bc}"></div></div></div>
     <table style="width:100%;font-size:13px;margin-top:12px">
-      <tr><td style="color:var(--text3)">Inicial do mês</td><td class="tr"><strong>${e.ini.toFixed(4)} g</strong></td></tr>
+      <tr><td style="color:var(--text3)">${labelIni}</td><td class="tr"><strong>${e.ini.toFixed(4)} g</strong></td></tr>
       <tr><td style="color:var(--text3)">+ Compras</td><td class="tr tgr">+${e.tc.toFixed(4)} g</td></tr>
       <tr><td style="color:var(--text3)">+ Ajustes / Sobras</td><td class="tr tgr">+${e.ap.toFixed(4)} g</td></tr>
       <tr><td style="color:var(--text3)">− Consumo operacional</td><td class="tr tr2">−${e.cons.toFixed(4)} g</td></tr>
       ${rowReforco}
       <tr><td style="color:var(--text3)">− Perdas / Ajustes neg.</td><td class="tr tr2">−${e.an.toFixed(4)} g</td></tr>
-      <tr style="border-top:2px solid var(--border);font-weight:700"><td>= Estoque Atual</td><td class="tr ${cc}">${e.est.toFixed(4)} g</td></tr>
+      <tr style="border-top:2px solid var(--border);font-weight:700"><td>= ${labelEst}</td><td class="tr ${cc}">${e.est.toFixed(4)} g</td></tr>
     </table>`;
   });
   renderMov();
@@ -1389,14 +1520,16 @@ function renderEst() {
 
 function renderMov() {
   const tbody=document.getElementById('tb-mov'); if(!tbody) return;
-  const mes=getMes(), movs=[];
-  COMP.filter(c=>c.mes_key===mes).forEach(c=>movs.push({data:c.data,metal:c.metal,tipo:'Compra',ent:parseFloat(c.qtd_g),sai:0,obs:c.fornecedor||c.obs}));
-  AJ.filter(a=>a.mes_key===mes).forEach(a=>{
+  const filtro=getEstFiltro(), movs=[];
+  const match=(row,dateField)=>filtro.per==='tudo' ? true : getRowMes(row,dateField)===filtro.mes;
+
+  COMP.filter(c=>match(c,'data')).forEach(c=>movs.push({data:c.data,metal:c.metal,tipo:'Compra',ent:parseFloat(c.qtd_g||0),sai:0,obs:c.fornecedor||c.obs}));
+  AJ.filter(a=>match(a,'data')).forEach(a=>{
     const ie=['ajuste_positivo','sobra_reaproveitada'].includes(a.tipo);
     const lb={ajuste_positivo:'Ajuste +',ajuste_negativo:'Ajuste −',perda:'Perda',sobra_reaproveitada:'Sobra +'}[a.tipo]||a.tipo;
-    movs.push({data:a.data,metal:a.metal,tipo:lb,ent:ie?parseFloat(a.qtd_g):0,sai:ie?0:parseFloat(a.qtd_g),obs:a.obs});
+    movs.push({data:a.data,metal:a.metal,tipo:lb,ent:ie?parseFloat(a.qtd_g||0):0,sai:ie?0:parseFloat(a.qtd_g||0),obs:a.obs});
   });
-  LAN.filter(l=>l.mes_key===mes).forEach(l=>{
+  LAN.filter(l=>match(l,'datetime_lancamento')).forEach(l=>{
     const c=parseFloat(l.consumo_calc||0);
     // Lançamentos de folheação (legado e novo) NÃO entram nas movimentações de estoque geral
     if(c>0 && !['folheacao','folheacao_consumo'].includes(l.tipo_lancamento)) {
@@ -1404,10 +1537,12 @@ function renderMov() {
     }
   });
   // Reforços da folheação aparecem como saída do estoque geral de Ouro
-  FOL.filter(f=>f.mes_key===mes && f.tipo==='reforco').forEach(f=>{
+  FOL.filter(f=>match(f,'data') && f.tipo==='reforco').forEach(f=>{
     movs.push({data:f.data,metal:'Ouro',tipo:'Reforço Folheação',ent:0,sai:parseFloat(f.quantidade_g||0),obs:f.obs||'sai do estoque, entra no saldo da folheação'});
   });
   movs.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  const title=document.getElementById('mov-title');
+  if(title) title.textContent = filtro.per==='tudo' ? '📋 Movimentações — Todo o histórico' : `📋 Movimentações — ${filtro.per==='mes'?'Mês Atual':fmtMes(filtro.mes)}`;
   if(!movs.length) { tbody.innerHTML=''; document.getElementById('mov-nd').classList.remove('hidden'); return; }
   document.getElementById('mov-nd').classList.add('hidden');
   tbody.innerHTML=movs.map(m=>`<tr><td>${fmtDate(m.data)}</td><td><span class="badge ${m.metal==='Ouro'?'bg-gold':'bg-silver'}">${m.metal}</span></td><td>${m.tipo}</td><td class="tr tgr">${m.ent>0?'+'+m.ent.toFixed(4)+' g':'—'}</td><td class="tr tr2">${m.sai>0?'−'+m.sai.toFixed(4)+' g':'—'}</td><td style="font-size:11px;color:var(--text3)">${m.obs||'—'}</td></tr>`).join('');
