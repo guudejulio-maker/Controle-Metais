@@ -1852,6 +1852,11 @@ async function gerarRel() {
 
     const fTipo = groupBy(lanPeriodo, r=>r.tipo_lancamento||'flash', r=>({tipo_lancamento:r.tipo_lancamento||'flash', metal:r.metal||'Ouro', peso_total_g:0, consumo_g:0, lotes:0}), (a,r)=>{ a.peso_total_g += parseFloat(r.peso_g||0); a.consumo_g += parseFloat(r.consumo_calc||0); a.lotes += 1; }).sort((a,b)=>b.consumo_g-a.consumo_g);
 
+    // DIAMANTE no período
+    const lanDiamPer = LAN.filter(l=>{ const d=(l.datetime_lancamento||'').substring(0,10); return (!ini||d>=ini)&&(!fim||d<=fim)&&l.tipo_lancamento==='diamante'; });
+    const kgDiamPer = lanDiamPer.reduce((s,l)=>s+parseFloat(l.peso_g||0),0);
+    const lDiamPer  = lanDiamPer.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+
     const fDia = groupBy([...lanPeriodo,...lanDiamPer], r=>(r.datetime_lancamento||'').substring(0,10), r=>({dia:(r.datetime_lancamento||'').substring(0,10), peso_ouro_g:0, peso_prata_g:0, peso_diam_g:0, consumo_ouro_g:0, consumo_prata_g:0, reforco_diam_l:0, lotes:0}), (a,r)=>{ const peso=parseFloat(r.peso_g||0), cons=parseFloat(r.consumo_calc||0); if(r.metal==='Prata'){ a.peso_prata_g+=peso; a.consumo_prata_g+=cons; } else if(r.tipo_lancamento==='diamante'){ a.peso_diam_g+=peso; a.reforco_diam_l+=cons; } else { a.peso_ouro_g+=peso; a.consumo_ouro_g+=cons; } a.lotes+=1; }).sort((a,b)=>a.dia.localeCompare(b.dia));
 
     const tO=fTipo.filter(r=>r.metal==='Ouro').reduce((s,r)=>s+r.consumo_g,0);
@@ -1868,11 +1873,6 @@ async function gerarRel() {
     const nDias=fDia.length;
 
     // FOLHEAÇÃO no período
-    // DIAMANTE no período
-    const lanDiamPer = LAN.filter(l=>{ const d=(l.datetime_lancamento||'').substring(0,10); return (!ini||d>=ini)&&(!fim||d<=fim)&&l.tipo_lancamento==='diamante'; });
-    const kgDiamPer = lanDiamPer.reduce((s,l)=>s+parseFloat(l.peso_g||0),0);
-    const lDiamPer  = lanDiamPer.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
-
     const tFolRef = folPeriodo.filter(f=>f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0);
     const tFolConNovo = folPeriodo.filter(f=>f.tipo==='consumo').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0);
     const tFolConLegado = folLegadoPeriodo.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
