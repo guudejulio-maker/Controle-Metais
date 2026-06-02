@@ -341,6 +341,7 @@ td{padding:8px 12px;vertical-align:middle}
       <button class="ltab" onclick="selTipo('ouro_extra')" id="tab-ouro_extra">➕ Ouro Extra</button>
       <button class="ltab" onclick="selTipo('montagem_cor')" id="tab-montagem_cor">🎨 Montagem Cor</button>
       <button class="ltab prata-tab" onclick="selTipo('prata')" id="tab-prata">🥈 Prata</button>
+      <button class="ltab" onclick="selTipo('diamante')" id="tab-diamante">💎 Diamante</button>
     </div>
 
     <div class="lan-body">
@@ -466,6 +467,18 @@ td{padding:8px 12px;vertical-align:middle}
         <button class="btn-save pr" onclick="salvarLan()">✔ SALVAR PRATA</button>
       </div>
 
+      <!-- DIAMANTE -->
+      <div id="form-diamante" class="hidden">
+        <div class="lrow">
+          <div class="lf w110"><label>📅 Data</label><input type="date" id="dm-data"></div>
+          <div class="lf w160"><label>💎 Tipo de Peça</label><select id="dm-tipo"></select></div>
+          <div class="lf w130"><label>⚖️ Peso (kg)</label><input type="number" id="dm-peso" step="0.001" placeholder="0.000" oninput="calcDiamante()"></div>
+          <div class="lf wflex"><label>Obs</label><input type="text" id="dm-obs" placeholder="Opcional..."></div>
+        </div>
+        <div class="prev" id="prev-diamante"><span>Informe o peso para calcular o reforço ▶</span></div>
+        <button class="btn-save" style="background:#1a56a0" onclick="salvarLan()">✔ SALVAR DIAMANTE</button>
+      </div>
+
       <div class="edit-bar hidden" id="edit-bar">
         ✏️ Editando lançamento &nbsp;
         <button onclick="cancelEdit()">✕ Cancelar edição</button>
@@ -503,6 +516,7 @@ td{padding:8px 12px;vertical-align:middle}
           <option value="ouro_extra">Ouro Extra</option>
           <option value="montagem_cor">Montagem Cor</option>
           <option value="prata">Prata</option>
+          <option value="diamante">Diamante</option>
         </select>
         <input type="text" id="f-busca" placeholder="Buscar..." onkeyup="renderLan()" style="border:1.5px solid var(--border2);border-radius:var(--rs);padding:5px 8px;font-size:12px;outline:none;width:120px">
       </div>
@@ -822,6 +836,7 @@ const TIPOS = {
   ouro_extra:        {label:'Ouro Extra',      badge:'bg-red',    metal:'Ouro'},
   montagem_cor:      {label:'Montagem Cor',    badge:'bg-purple', metal:'Ouro'},
   prata:             {label:'Prata',           badge:'bg-silver', metal:'Prata'},
+  diamante:          {label:'Diamante',         badge:'bg-blue',   metal:'Diamante'},
 };
 
 function getMes() { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
@@ -917,7 +932,7 @@ function selTipo(t) {
   TIPO_ATIVO=t;
   document.querySelectorAll('.ltab').forEach(b=>b.classList.remove('on'));
   document.getElementById('tab-'+t).classList.add('on');
-  ['flash','folheacao','pre_ouro','pre_ouro_flash','ouro_extra','montagem_cor','prata'].forEach(x=>{
+  ['flash','folheacao','pre_ouro','pre_ouro_flash','ouro_extra','montagem_cor','prata','diamante'].forEach(x=>{
     document.getElementById('form-'+x).classList.toggle('hidden',x!==t);
   });
   cancelEdit();
@@ -926,13 +941,14 @@ function selTipo(t) {
 
 function setDatas() {
   const d=hoje();
-  ['fl','fo','po','pof','oe','mc','pr','for','foc'].forEach(p=>{
+  ['fl','fo','po','pof','oe','mc','pr','for','foc','dm'].forEach(p=>{
     const el=document.getElementById(p+'-data'); if(el&&!el.value) el.value=d;
   });
 }
 
 function populateSels() {
   fillSel('fl-tipo', CFG.tipos);
+  fillSel('dm-tipo', CFG.tipos);
   fillSel('fl-cor', CFG.cores);
   fillSel('mc-cor', CFG.cores);
   fillSel('oe-dest', [...CFG.cores, '— Folheação']);
@@ -1050,6 +1066,18 @@ function calcShow(peso, un, cam, prevId, metal) {
 function calcFlash()     { calcShow(parseFloat(document.getElementById('fl-peso').value)||0, document.getElementById('fl-un').value, document.getElementById('fl-cam').value,'prev-flash','Ouro'); }
 function calcFolheacaoConsumo() { calcShow(parseFloat(document.getElementById('foc-peso').value)||0, document.getElementById('foc-un').value, document.getElementById('foc-cam').value,'prev-folheacao-cons','Ouro'); }
 function calcPreOuro()   { calcShow(parseFloat(document.getElementById('po-peso').value)||0, document.getElementById('po-un').value, document.getElementById('po-cam').value,'prev-pre_ouro','Ouro'); }
+function calcDiamante() {
+  const peso = parseFloat(document.getElementById('dm-peso').value)||0;
+  const reforco = peso / 5;
+  const prev = document.getElementById('prev-diamante');
+  if(prev) {
+    if(peso > 0) {
+      prev.innerHTML = `<span>${peso.toLocaleString('pt-BR',{maximumFractionDigits:3})} kg banhados =</span> <strong style="color:var(--blue)">${reforco.toFixed(4)} L</strong> <span style="opacity:.5;font-size:11px">de reforço diamante</span>`;
+    } else {
+      prev.innerHTML = '<span>Informe o peso para calcular o reforço ▶</span>';
+    }
+  }
+}
 function calcPrata()     { calcShow(parseFloat(document.getElementById('pr-peso').value)||0, document.getElementById('pr-un').value, document.getElementById('pr-cam').value,'prev-prata','Prata'); }
 
 function prevPOF() {
@@ -1096,6 +1124,11 @@ async function salvarLan() {
     const cam=parseFloat(document.getElementById('pr-cam').value)||0;
     if(!pg||!cam) { toast('Informe peso e camada.','error'); return; }
     payload={metal:'Prata',tipo_peca:'Prata',peso_g:pg,cor:'—',camada:cam.toString(),consumo_calc:pg*cam,obs:document.getElementById('pr-obs').value||null,datetime_lancamento:document.getElementById('pr-data').value+'T00:00:00'};
+  } else if(t==='diamante') {
+    const pg=parseFloat(document.getElementById('dm-peso').value)||0;
+    if(!pg) { toast('Informe o peso em kg.','error'); return; }
+    const reforco = pg / 5; // 1L a cada 5kg
+    payload={metal:'Diamante',tipo_peca:document.getElementById('dm-tipo').value,peso_g:pg,cor:'—',camada:'—',consumo_calc:reforco,obs:document.getElementById('dm-obs').value||null,datetime_lancamento:document.getElementById('dm-data').value+'T00:00:00'};
   }
 
   if(!payload) return;
@@ -1124,9 +1157,9 @@ async function salvarLan() {
 }
 
 function limparForm(t) {
-  const m={'flash':['fl-peso','fl-cam','fl-obs'],'pre_ouro':['po-peso','po-cam','po-obs'],'pre_ouro_flash':['pof-qtd','pof-obs'],'ouro_extra':['oe-qtd','oe-obs'],'montagem_cor':['mc-qtd','mc-obs'],'prata':['pr-peso','pr-cam','pr-obs']};
+  const m={'flash':['fl-peso','fl-cam','fl-obs'],'pre_ouro':['po-peso','po-cam','po-obs'],'pre_ouro_flash':['pof-qtd','pof-obs'],'ouro_extra':['oe-qtd','oe-obs'],'montagem_cor':['mc-qtd','mc-obs'],'prata':['pr-peso','pr-cam','pr-obs'],'diamante':['dm-peso','dm-obs']};
   (m[t]||[]).forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  const pvs={'flash':'prev-flash','pre_ouro':'prev-pre_ouro','pre_ouro_flash':'prev-pof','prata':'prev-prata'};
+  const pvs={'flash':'prev-flash','pre_ouro':'prev-pre_ouro','pre_ouro_flash':'prev-pof','prata':'prev-prata','diamante':'prev-diamante'};
   if(pvs[t]) { const el=document.getElementById(pvs[t]); if(el) el.innerHTML='<span>Preencha peso e camada ▶</span>'; }
 }
 
@@ -1144,6 +1177,7 @@ function editarLan(id) {
     ouro_extra: ()=>{ document.getElementById('oe-data').value=data; document.getElementById('oe-qtd').value=l.consumo_calc; document.getElementById('oe-dest').value=l.cor; document.getElementById('oe-obs').value=l.obs||''; },
     montagem_cor: ()=>{ document.getElementById('mc-data').value=data; document.getElementById('mc-qtd').value=l.consumo_calc; document.getElementById('mc-cor').value=l.cor; document.getElementById('mc-obs').value=l.obs||''; },
     prata: ()=>{ document.getElementById('pr-data').value=data; document.getElementById('pr-cam').value=l.camada; document.getElementById('pr-peso').value=l.peso_g; document.getElementById('pr-obs').value=l.obs||''; calcPrata(); },
+    diamante: ()=>{ document.getElementById('dm-data').value=data; document.getElementById('dm-tipo').value=l.tipo_peca; document.getElementById('dm-peso').value=l.peso_g; document.getElementById('dm-obs').value=l.obs||''; calcDiamante(); },
   };
   sets[t]?.();
   document.getElementById('edit-id').value=id;
@@ -1374,12 +1408,13 @@ function renderLan() {
     else if(tl==='folheacao_reforco') det=`<strong style="color:var(--green)">+ Reforço</strong> · sai do estoque, entra no saldo`;
     else if(tl==='folheacao_consumo') det=`<strong style="color:var(--orange)">− Consumo</strong> · sai apenas do saldo`;
     else if(tl==='folheacao') det=`<span style="color:var(--text3)">Folheação (legado)</span>`;
+    else if(tl==='diamante') det=`<strong style="color:var(--blue)">${l.tipo_peca}</strong> · reforço: ${c.toFixed(4)} L`;
     else det=ti.label;
     const camStr=(l.camada&&l.camada!=='—')?`<span style="color:var(--text3);font-size:11px"> cam:${l.camada}</span>`:'';
     const pesoStr=parseFloat(l.peso_g||0)>0?fmtPeso(parseFloat(l.peso_g||0)):'—';
     const consColor = l._isFol
       ? (l.tipo_lancamento==='folheacao_reforco' ? 'var(--green)' : 'var(--orange)')
-      : (l.metal==='Ouro' ? 'var(--gold-dark)' : 'var(--silver-dark)');
+      : (l.metal==='Ouro' ? 'var(--gold-dark)' : l.metal==='Diamante' ? 'var(--blue)' : 'var(--silver-dark)');
     const acoes = l._isFol
       ? (!l.fechado ? `<button class="btn bd bsm bic" onclick="delFol('${l._foId}')" title="Excluir">🗑️</button>` : '—')
       : (!l.fechado ? `<button class="btn bs bsm bic" onclick="editarLan('${l.id}')" title="Editar">✏️</button> <button class="btn bd bsm bic" onclick="delLan('${l.id}')" title="Excluir">🗑️</button>` : '—');
@@ -1525,7 +1560,7 @@ function _chainEst(metal) {
     const aj = AJ.filter(a=>getRowMes(a,'data')===mk && a.metal===metal);
     const ap = aj.filter(a=>['ajuste_positivo','sobra_reaproveitada'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
     const an = aj.filter(a=>['ajuste_negativo','perda'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
-    const cons = LAN.filter(l=>getRowMes(l,'datetime_lancamento')===mk && l.metal===metal && !['folheacao','folheacao_consumo'].includes(l.tipo_lancamento))
+    const cons = LAN.filter(l=>getRowMes(l,'datetime_lancamento')===mk && l.metal===metal && !['folheacao','folheacao_consumo','diamante'].includes(l.tipo_lancamento))
                     .reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
     const reforcosFol = metal==='Ouro'
       ? FOL.filter(f=>getRowMes(f,'data')===mk && f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0)
@@ -1594,7 +1629,7 @@ function renderMov() {
   LAN.filter(l=>match(l,'datetime_lancamento')).forEach(l=>{
     const c=parseFloat(l.consumo_calc||0);
     // Lançamentos de folheação (legado e novo) NÃO entram nas movimentações de estoque geral
-    if(c>0 && !['folheacao','folheacao_consumo'].includes(l.tipo_lancamento)) {
+    if(c>0 && !['folheacao','folheacao_consumo','diamante'].includes(l.tipo_lancamento)) {
       movs.push({data:l.datetime_lancamento?.split('T')[0],metal:l.metal,tipo:TIPOS[l.tipo_lancamento||'flash']?.label||l.tipo_lancamento,ent:0,sai:c,obs:l.cor!=='—'?l.cor:''});
     }
   });
@@ -1623,6 +1658,9 @@ function renderDashboard() {
   const hj=hoje(), lhj=lanOp.filter(l=>l.datetime_lancamento?.startsWith(hj));
   const cOhj=lhj.filter(l=>l.metal==='Ouro').reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
   const cPhj=lhj.filter(l=>l.metal==='Prata').reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+  const lanDiam=lan.filter(l=>l.tipo_lancamento==='diamante');
+  const kgDiam=lanDiam.reduce((s,l)=>s+parseFloat(l.peso_g||0),0);
+  const lDiam=lanDiam.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
   const vO=COMP.filter(c=>c.mes_key===mes&&c.metal==='Ouro').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
   const vP=COMP.filter(c=>c.mes_key===mes&&c.metal==='Prata').reduce((s,c)=>s+parseFloat(c.valor_rs||0),0);
   const folNeg = fol.saldo < 0;
@@ -1644,6 +1682,8 @@ function renderDashboard() {
     {l:'Prata Inicial',v:eP.ini.toFixed(3)+' g',s:'Mês atual',c:'s-o'},
     {l:'Total Lançamentos',v:lan.length.toString(),s:'No mês',c:'s-p'},
     {l:'Lançamentos Hoje',v:(lhj.length+FOL.filter(f=>f.data===hj).length).toString(),s:'Hoje',c:'s-p'},
+    {l:'Diamante — Peso Mês',v:kgDiam.toFixed(3)+' kg',s:lanDiam.length+' lançamentos',c:'s-b'},
+    {l:'Diamante — Reforço Mês',v:lDiam.toFixed(4)+' L',s:'1 L / 5 kg',c:'s-b'},
   ];
   document.getElementById('dash-cards').innerHTML=cards.map(c=>`<div class="stat ${c.c}"><div class="slbl">${c.l}</div><div class="sval ${c.vc||''}">${c.v}</div><div class="ssub">${c.s}</div></div>`).join('');
 
@@ -1812,7 +1852,7 @@ async function gerarRel() {
 
     const fTipo = groupBy(lanPeriodo, r=>r.tipo_lancamento||'flash', r=>({tipo_lancamento:r.tipo_lancamento||'flash', metal:r.metal||'Ouro', peso_total_g:0, consumo_g:0, lotes:0}), (a,r)=>{ a.peso_total_g += parseFloat(r.peso_g||0); a.consumo_g += parseFloat(r.consumo_calc||0); a.lotes += 1; }).sort((a,b)=>b.consumo_g-a.consumo_g);
 
-    const fDia = groupBy(lanPeriodo, r=>(r.datetime_lancamento||'').substring(0,10), r=>({dia:(r.datetime_lancamento||'').substring(0,10), peso_ouro_g:0, peso_prata_g:0, consumo_ouro_g:0, consumo_prata_g:0, lotes:0}), (a,r)=>{ const peso=parseFloat(r.peso_g||0), cons=parseFloat(r.consumo_calc||0); if(r.metal==='Prata'){ a.peso_prata_g += peso; a.consumo_prata_g += cons; } else { a.peso_ouro_g += peso; a.consumo_ouro_g += cons; } a.lotes += 1; }).sort((a,b)=>a.dia.localeCompare(b.dia));
+    const fDia = groupBy([...lanPeriodo,...lanDiamPer], r=>(r.datetime_lancamento||'').substring(0,10), r=>({dia:(r.datetime_lancamento||'').substring(0,10), peso_ouro_g:0, peso_prata_g:0, peso_diam_g:0, consumo_ouro_g:0, consumo_prata_g:0, reforco_diam_l:0, lotes:0}), (a,r)=>{ const peso=parseFloat(r.peso_g||0), cons=parseFloat(r.consumo_calc||0); if(r.metal==='Prata'){ a.peso_prata_g+=peso; a.consumo_prata_g+=cons; } else if(r.tipo_lancamento==='diamante'){ a.peso_diam_g+=peso; a.reforco_diam_l+=cons; } else { a.peso_ouro_g+=peso; a.consumo_ouro_g+=cons; } a.lotes+=1; }).sort((a,b)=>a.dia.localeCompare(b.dia));
 
     const tO=fTipo.filter(r=>r.metal==='Ouro').reduce((s,r)=>s+r.consumo_g,0);
     const tP=fTipo.filter(r=>r.metal==='Prata').reduce((s,r)=>s+r.consumo_g,0);
@@ -1828,6 +1868,11 @@ async function gerarRel() {
     const nDias=fDia.length;
 
     // FOLHEAÇÃO no período
+    // DIAMANTE no período
+    const lanDiamPer = LAN.filter(l=>{ const d=(l.datetime_lancamento||'').substring(0,10); return (!ini||d>=ini)&&(!fim||d<=fim)&&l.tipo_lancamento==='diamante'; });
+    const kgDiamPer = lanDiamPer.reduce((s,l)=>s+parseFloat(l.peso_g||0),0);
+    const lDiamPer  = lanDiamPer.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
+
     const tFolRef = folPeriodo.filter(f=>f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0);
     const tFolConNovo = folPeriodo.filter(f=>f.tipo==='consumo').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0);
     const tFolConLegado = folLegadoPeriodo.reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
@@ -1949,23 +1994,32 @@ async function gerarRel() {
     const tblDia=()=>{
       if(!fDia.length) return '<div class="nd">Sem dados.</div>';
       const mxO=Math.max(...fDia.map(r=>parseFloat(r.consumo_ouro_g||0)),.001);
-      return `<div class="tw"><table><thead><tr><th>Data</th><th class="tr">Peso Banhado</th><th class="tr">Consumo Ouro</th><th class="tr">Consumo Prata</th><th class="tr">Total Metal</th><th class="tr">Lotes</th></tr></thead><tbody>
+      return `<div class="tw"><table><thead><tr><th>Data</th><th class="tr">Ouro (kg)</th><th class="tr">Prata (kg)</th><th class="tr">Diamante (kg)</th><th class="tr">Consumo Ouro</th><th class="tr">Consumo Prata</th><th class="tr">Reforço Diam. (L)</th><th class="tr">Total kg</th><th class="tr">Lotes</th></tr></thead><tbody>
       ${fDia.map(r=>{
-        const pO=parseFloat(r.peso_ouro_g||0), pP=parseFloat(r.peso_prata_g||0);
-        const cO=parseFloat(r.consumo_ouro_g||0), cP=parseFloat(r.consumo_prata_g||0);
+        const pO=parseFloat(r.peso_ouro_g||0), pP=parseFloat(r.peso_prata_g||0), pD=parseFloat(r.peso_diam_g||0);
+        const cO=parseFloat(r.consumo_ouro_g||0), cP=parseFloat(r.consumo_prata_g||0), rD=parseFloat(r.reforco_diam_l||0);
         return `<tr>
           <td><strong>${fmtDate((r.dia||'').substring(0,10))}</strong></td>
-          <td class="tr">${fmtPeso(pO+pP)}</td>
-          <td class="tr"><div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">${bar(cO,mxO)}<span class="tg">${cO>0?cO.toFixed(4):'—'}</span></div></td>
-          <td class="tr ts">${cP>0?cP.toFixed(4):'—'}</td>
-          <td class="tr" style="font-weight:700">${(cO+cP).toFixed(4)} g</td>
+          <td class="tr tg">${pO>0?pO.toFixed(3)+' kg':'—'}</td>
+          <td class="tr ts">${pP>0?pP.toFixed(3)+' kg':'—'}</td>
+          <td class="tr" style="color:var(--blue);font-weight:700">${pD>0?pD.toFixed(3)+' kg':'—'}</td>
+          <td class="tr tg">${cO>0?cO.toFixed(4)+' g':'—'}</td>
+          <td class="tr ts">${cP>0?cP.toFixed(4)+' g':'—'}</td>
+          <td class="tr" style="color:var(--blue)">${rD>0?rD.toFixed(4)+' L':'—'}</td>
+          <td class="tr" style="font-weight:700">${(pO+pP+pD).toFixed(3)} kg</td>
           <td class="tr">${r.lotes}</td>
         </tr>`;
       }).join('')}
       <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc">
-        <td>TOTAL</td><td class="tr">${fmtPeso(tPesoO+tPesoP)}</td>
-        <td class="tr tg">${tO.toFixed(4)} g</td><td class="tr ts">${tP.toFixed(4)} g</td>
-        <td class="tr">${(tO+tP).toFixed(4)} g</td><td class="tr">${nLotes}</td>
+        <td>TOTAL</td>
+        <td class="tr tg">${tPesoO.toFixed(3)} kg</td>
+        <td class="tr ts">${tPesoP.toFixed(3)} kg</td>
+        <td class="tr" style="color:var(--blue)">${kgDiamPer.toFixed(3)} kg</td>
+        <td class="tr tg">${tO.toFixed(4)} g</td>
+        <td class="tr ts">${tP.toFixed(4)} g</td>
+        <td class="tr" style="color:var(--blue)">${lDiamPer.toFixed(4)} L</td>
+        <td class="tr" style="font-weight:700">${(tPesoO+tPesoP+kgDiamPer).toFixed(3)} kg</td>
+        <td class="tr">${nLotes+lanDiamPer.length}</td>
       </tr></tbody></table></div>`;
     };
 
@@ -1985,6 +2039,8 @@ async function gerarRel() {
         <div class="stat s-gr"><div class="slbl">Reforços Folheação</div><div class="sval vgr">+${tFolRef.toFixed(3)} g</div><div class="ssub">no período</div></div>
         <div class="stat s-o"><div class="slbl">Consumo Folheação</div><div class="sval">−${tFolCon.toFixed(3)} g</div><div class="ssub">${tFolConLegado>0?`inclui ${tFolConLegado.toFixed(3)} g legado`:'no período'}</div></div>
         <div class="stat ${folSaldoFinal.saldo<0?'s-r':'s-gr'}"><div class="slbl">Saldo Folheação</div><div class="sval ${folSaldoFinal.saldo<0?'vr':'vgr'}">${folSaldoFinal.saldo.toFixed(3)} g</div><div class="ssub">${folSaldoFinal.saldo<0?'⚠️ negativo':'fim '+fmtMes(mesFinal)}</div></div>
+        <div class="stat s-b"><div class="slbl">Diamante — Peso</div><div class="sval" style="color:var(--blue)">${kgDiamPer.toFixed(3)} kg</div><div class="ssub">${lanDiamPer.length} lançamentos</div></div>
+        <div class="stat s-b"><div class="slbl">Diamante — Reforço</div><div class="sval" style="color:var(--blue)">${lDiamPer.toFixed(4)} L</div><div class="ssub">1 L / 5 kg</div></div>
         <div class="stat s-p"><div class="slbl">Total Lançamentos</div><div class="sval">${nLotes}</div><div class="ssub">${nDias} dias</div></div>
         ${nDias>0?`<div class="stat s-p"><div class="slbl">Média Diária Ouro</div><div class="sval">${(tO/nDias).toFixed(4)} g</div><div class="ssub">por dia</div></div>`:''}
       </div>
