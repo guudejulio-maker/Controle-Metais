@@ -2110,32 +2110,35 @@ async function fecharMes() {
   const oI=isNaN(nO)?eO.est:nO, pI=isNaN(nP)?eP.est:nP, fI=isNaN(nF)?fol.saldo:nF;
   try {
     setSt('load','⏳ Fechando...');
-    // Salva valores finais no mês atual (folheacao_final só se a coluna existir; se falhar, segue)
-    try {
-      await db.pw('metais_meses','mes_key=eq.'+mes,{status:'fechado',ouro_final:eO.est,prata_final:eP.est,folheacao_final:fol.saldo,fechado_em:new Date().toISOString()});
-    } catch(e) {
-      // Fallback se a coluna folheacao_final ainda não foi criada
-      await db.pw('metais_meses','mes_key=eq.'+mes,{status:'fechado',ouro_final:eO.est,prata_final:eP.est,fechado_em:new Date().toISOString()});
-    }
+    // Fecha o mês atual com todos os valores finais
+    await db.pw('metais_meses','mes_key=eq.'+mes,{status:'fechado',ouro_final:eO.est,prata_final:eP.est,folheacao_final:fol.saldo,fechado_em:new Date().toISOString()});
+    // Trava lançamentos e movimentos de folheação do mês
     await db.pw('metais_lancamentos','mes_key=eq.'+mes,{fechado:true});
-    // Marca movimentos de folheação do mês como fechados (best-effort)
     try { await db.pw('metais_folheacao_movimentos','mes_key=eq.'+mes,{fechado:true}); } catch(e){}
+
     const prox=nextMes(mes);
-    if(!CFG.ouro_inicial) CFG.ouro_inicial={}; if(!CFG.prata_inicial) CFG.prata_inicial={}; if(!CFG.folheacao_inicial) CFG.folheacao_inicial={};
-    CFG.ouro_inicial[prox]=oI; CFG.prata_inicial[prox]=pI; CFG.folheacao_inicial[prox]=fI;
+    if(!CFG.ouro_inicial) CFG.ouro_inicial={};
+    if(!CFG.prata_inicial) CFG.prata_inicial={};
+    if(!CFG.folheacao_inicial) CFG.folheacao_inicial={};
+
+    // Grava os iniciais do próximo mês — saldo final do mês fechado vira abertura do próximo
+    CFG.ouro_inicial[prox]=oI;
+    CFG.prata_inicial[prox]=pI;
+    CFG.folheacao_inicial[prox]=fI; // âncora: quebra a cadeia e inicia do saldo correto
+
+    // Salva configs no banco
     await db.cfg('ouro_inicial',CFG.ouro_inicial);
     await db.cfg('prata_inicial',CFG.prata_inicial);
     await db.cfg('folheacao_inicial',CFG.folheacao_inicial);
-    try {
-      await db.post('metais_meses',{mes_key:prox,status:'aberto',ouro_inicial:oI,prata_inicial:pI,folheacao_inicial:fI});
-    } catch(e) {
-      await db.post('metais_meses',{mes_key:prox,status:'aberto',ouro_inicial:oI,prata_inicial:pI});
-    }
+
+    // Cria o registro do próximo mês com todos os iniciais
+    await db.post('metais_meses',{mes_key:prox,status:'aberto',ouro_inicial:oI,prata_inicial:pI,folheacao_inicial:fI});
+
     await loadData(); setSt('ok','✓ Online');
     document.getElementById('mes-label').textContent=fmtMes(prox);
     populateMesSel();
     renderFech(); renderDashboard(); checkAlerts();
-    toast(`Mês ${fmtMes(mes)} fechado! Iniciando ${fmtMes(prox)}.`);
+    toast(`Mês ${fmtMes(mes)} fechado! ${fmtMes(prox)} iniciado — Ouro: ${oI.toFixed(3)}g · Prata: ${pI.toFixed(3)}g · Folheação: ${fI.toFixed(3)}g`);
   } catch(e) { setSt('err','✗ Erro'); toast('Erro: '+e.message,'error'); }
 }
 
