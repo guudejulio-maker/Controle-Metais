@@ -2114,29 +2114,49 @@ function expCSVAll() {
 /* ============================================================
    CONSUMO DIÁRIO (REPOSIÇÃO DE BANHO)
 ============================================================ */
-// Consumo do dia, agrupado por banho (tipo_lancamento). Folheação entra
-// como uma linha própria, somando os movimentos novos (metais_folheacao_movimentos,
-// tipo='consumo') com os lançamentos legados (tipo_lancamento='folheacao').
+// Consumo do dia, detalhado por banho (tipo_lancamento) e, dentro de cada
+// banho, por cor + tanque + camada — pra saber exatamente onde repor.
+// Folheação entra como um banho próprio, somando os movimentos novos
+// (metais_folheacao_movimentos, tipo='consumo') com os lançamentos
+// legados (tipo_lancamento='folheacao').
 function calcConsumoDia(dia) {
-  const acc = {};
+  const det = {};
+  const addDet = (tipo, metal, cor, camada, tanque, peso, consumo) => {
+    const key = `${tipo}||${cor}||${camada}||${tanque}`;
+    if(!det[key]) det[key] = {tipo, metal, cor, camada, tanque, peso_kg:0, consumo_g:0, lotes:0};
+    det[key].peso_kg += peso;
+    det[key].consumo_g += consumo;
+    det[key].lotes += 1;
+  };
+
   LAN.forEach(l=>{
     if((l.datetime_lancamento||'').substring(0,10)!==dia) return;
     if(l.tipo_lancamento==='folheacao') return; // tratado abaixo, junto com FOL
-    const t=l.tipo_lancamento||'flash';
-    if(!acc[t]) acc[t]={tipo:t, metal:l.metal, peso_kg:0, consumo_g:0, lotes:0};
-    acc[t].peso_kg += parseFloat(l.peso_g||0);
-    acc[t].consumo_g += parseFloat(l.consumo_calc||0);
-    acc[t].lotes += 1;
+    addDet(l.tipo_lancamento||'flash', l.metal, l.cor||'—', l.camada||'—', l.tanque||'—', parseFloat(l.peso_g||0), parseFloat(l.consumo_calc||0));
   });
-  let folPeso=0, folCons=0, folLotes=0;
   FOL.forEach(f=>{
-    if(f.tipo==='consumo' && (f.data||'').substring(0,10)===dia) { folCons+=parseFloat(f.quantidade_g||0); folLotes+=1; }
+    if(f.tipo==='consumo' && (f.data||'').substring(0,10)===dia) {
+      addDet('folheacao', 'Ouro', '—', f.camada||'—', '—', parseFloat(f.peso_kg||0), parseFloat(f.quantidade_g||0));
+    }
   });
   LAN.forEach(l=>{
-    if(l.tipo_lancamento==='folheacao' && (l.datetime_lancamento||'').substring(0,10)===dia) { folPeso+=parseFloat(l.peso_g||0); folCons+=parseFloat(l.consumo_calc||0); folLotes+=1; }
+    if(l.tipo_lancamento==='folheacao' && (l.datetime_lancamento||'').substring(0,10)===dia) {
+      addDet('folheacao', 'Ouro', l.cor||'—', l.camada||'—', l.tanque||'—', parseFloat(l.peso_g||0), parseFloat(l.consumo_calc||0));
+    }
   });
-  if(folLotes>0) acc['folheacao']={tipo:'folheacao', metal:'Ouro', peso_kg:folPeso, consumo_g:folCons, lotes:folLotes};
-  return Object.values(acc).sort((a,b)=>b.consumo_g-a.consumo_g);
+
+  const banhos = {};
+  Object.values(det).forEach(d=>{
+    if(!banhos[d.tipo]) banhos[d.tipo]={tipo:d.tipo, metal:d.metal, peso_kg:0, consumo_g:0, lotes:0, itens:[]};
+    banhos[d.tipo].peso_kg += d.peso_kg;
+    banhos[d.tipo].consumo_g += d.consumo_g;
+    banhos[d.tipo].lotes += d.lotes;
+    banhos[d.tipo].itens.push(d);
+  });
+  const lista = Object.values(banhos);
+  lista.forEach(b=>b.itens.sort((a,b2)=>b2.consumo_g-a.consumo_g));
+  lista.sort((a,b)=>b.consumo_g-a.consumo_g);
+  return lista;
 }
 
 function mudaDiaCD(delta) {
@@ -2169,25 +2189,33 @@ function renderConsumoDiario() {
         ${totD>0?`<div class="stat s-b"><div class="slbl">Diamante</div><div class="sval" style="color:var(--blue)">${totD.toFixed(4)} g</div><div class="ssub">${fmtDate(dia)}</div></div>`:''}
       </div>
       <div class="card">
-        <div class="ct">🧪 Reposição por Banho — ${fmtDate(dia)}</div>
-        <div class="tw"><table><thead><tr><th>Banho</th><th class="tr">Peso Processado</th><th class="tr">Lotes</th><th class="tr">Repor no Tanque</th></tr></thead><tbody>
+        <div class="ct">🧪 Reposição por Banho — ${fmtDate(dia)} <small style="font-weight:400;text-transform:none;letter-spacing:0">detalhado por cor/tanque/camada</small></div>
+        <div class="tw"><table><thead><tr><th>Banho</th><th>Cor</th><th>Tanque</th><th class="tr">Camada</th><th class="tr">Peso</th><th class="tr">Lotes</th><th class="tr">Repor no Tanque</th></tr></thead><tbody>
         ${porBanho.map(r=>{
           const tp=TIPOS[r.tipo]||{label:r.tipo,badge:'bg-gold'};
           const cls = r.metal==='Prata'?'ts':(r.metal==='Diamante'?'':'tg');
           const style = r.metal==='Diamante'?' style="color:var(--blue)"':'';
-          return `<tr>
+          const linhasItens = r.itens.map(it=>`<tr>
             <td><span class="badge ${tp.badge}">${tp.label}</span></td>
-            <td class="tr">${fmtPeso(r.peso_kg)}</td>
-            <td class="tr">${r.lotes}</td>
+            <td>${it.cor}</td>
+            <td style="color:var(--text3)">${it.tanque}</td>
+            <td class="tr" style="color:var(--text3)">${it.camada}</td>
+            <td class="tr">${fmtPeso(it.peso_kg)}</td>
+            <td class="tr">${it.lotes}</td>
+            <td class="tr"><strong class="${cls}"${style}>${it.consumo_g.toFixed(4)} g</strong></td>
+          </tr>`).join('');
+          const subtotal = r.itens.length>1 ? `<tr style="background:var(--surface2);font-weight:700">
+            <td colspan="6">Subtotal ${tp.label}</td>
             <td class="tr"><strong class="${cls}"${style}>${r.consumo_g.toFixed(4)} g</strong></td>
-          </tr>`;
+          </tr>` : '';
+          return linhasItens + subtotal;
         }).join('')}
         <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc">
-          <td colspan="3">TOTAL DO DIA</td>
+          <td colspan="6">TOTAL DO DIA</td>
           <td class="tr">Ouro <strong class="tg">${totO.toFixed(4)} g</strong> · Prata <strong class="ts">${totP.toFixed(4)} g</strong></td>
         </tr>
         </tbody></table></div>
-        <p style="font-size:11px;color:var(--text3);margin-top:10px">💡 Repasse esses valores ao operador: é exatamente o quanto precisa repor em cada banho hoje.</p>
+        <p style="font-size:11px;color:var(--text3);margin-top:10px">💡 Repasse esses valores ao operador: é exatamente o quanto precisa repor em cada cor/tanque hoje. O campo "Tanque" só aparece preenchido se você começar a informar o tanque no lançamento.</p>
       </div>`;
   }
   renderCDHist(dia);
@@ -2223,8 +2251,11 @@ function renderCDHist(diaAtual) {
 function expCSVConsumo() {
   const dia=document.getElementById('cd-data').value||hoje();
   const porBanho = calcConsumoDia(dia);
-  const h=['Banho','Metal','Peso Processado (kg)','Lotes','Consumo/Repor (g)'];
-  const rows = porBanho.map(r=>[TIPOS[r.tipo]?.label||r.tipo, r.metal, r.peso_kg.toFixed(3), r.lotes, r.consumo_g.toFixed(4)]);
+  const h=['Banho','Metal','Cor','Tanque','Camada','Peso (kg)','Lotes','Consumo/Repor (g)'];
+  const rows = [];
+  porBanho.forEach(r=>{
+    r.itens.forEach(it=>rows.push([TIPOS[r.tipo]?.label||r.tipo, r.metal, it.cor, it.tanque, it.camada, it.peso_kg.toFixed(3), it.lotes, it.consumo_g.toFixed(4)]));
+  });
   dlFile(`consumo_diario_${dia}.csv`,[h,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'text/csv');
   toast('CSV exportado!');
 }
