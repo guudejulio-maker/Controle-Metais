@@ -317,6 +317,7 @@ td{padding:8px 12px;vertical-align:middle}
   <div class="ntab" onclick="pg('compras')">🛒 Compras</div>
   <div class="ntab" onclick="pg('estoque')">🏭 Estoque</div>
   <div class="ntab" onclick="pg('relatorios')">📈 Relatórios</div>
+  <div class="ntab" onclick="pg('consumo')">🧪 Consumo Diário</div>
   <div class="ntab" onclick="pg('fechamento')">📅 Fechamento</div>
   <div class="ntab" onclick="pg('config')">⚙️ Config.</div>
 </div>
@@ -685,6 +686,25 @@ td{padding:8px 12px;vertical-align:middle}
 </div>
 
 <!-- ═══════════════════════════════════════════════
+     CONSUMO DIÁRIO (REPOSIÇÃO DE BANHO)
+═══════════════════════════════════════════════ -->
+<div class="pg" id="pg-consumo">
+  <div class="sh"><div class="sh-t">🧪 Consumo Diário <small>quanto repor em cada banho, dia a dia</small></div></div>
+  <div class="fbar">
+    <button class="btn bs bsm bic" onclick="mudaDiaCD(-1)" title="Dia anterior">◀</button>
+    <input type="date" id="cd-data" onchange="renderConsumoDiario()">
+    <button class="btn bs bsm bic" onclick="mudaDiaCD(1)" title="Dia seguinte">▶</button>
+    <button class="btn bp bsm" onclick="cdHoje()">Hoje</button>
+    <button class="btn bs bsm" onclick="expCSVConsumo()" style="margin-left:auto">⬇ CSV</button>
+  </div>
+  <div id="cd-out"></div>
+  <div class="card">
+    <div class="ct">🗓️ Últimos Dias</div>
+    <div id="cd-hist-out"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
      FECHAMENTO
 ═══════════════════════════════════════════════ -->
 <div class="pg" id="pg-fechamento">
@@ -914,13 +934,14 @@ function pg(p) {
   document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.ntab').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p).classList.add('on');
-  const ord=['lancamentos','dashboard','compras','estoque','relatorios','fechamento','config'];
+  const ord=['lancamentos','dashboard','compras','estoque','relatorios','consumo','fechamento','config'];
   document.querySelectorAll('.ntab')[ord.indexOf(p)]?.classList.add('on');
   if(p==='dashboard') renderDashboard();
   if(p==='lancamentos') renderLan();
   if(p==='compras') renderComp();
   if(p==='estoque') renderEst();
   if(p==='relatorios') gerarRel();
+  if(p==='consumo') renderConsumoDiario();
   if(p==='fechamento') renderFech();
   if(p==='config') renderCfg();
 }
@@ -2088,6 +2109,124 @@ function expCSVAll() {
   ];
   dlFile(`metais_completo_${hoje()}.csv`,[h,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'text/csv');
   toast('CSV completo exportado!');
+}
+
+/* ============================================================
+   CONSUMO DIÁRIO (REPOSIÇÃO DE BANHO)
+============================================================ */
+// Consumo do dia, agrupado por banho (tipo_lancamento). Folheação entra
+// como uma linha própria, somando os movimentos novos (metais_folheacao_movimentos,
+// tipo='consumo') com os lançamentos legados (tipo_lancamento='folheacao').
+function calcConsumoDia(dia) {
+  const acc = {};
+  LAN.forEach(l=>{
+    if((l.datetime_lancamento||'').substring(0,10)!==dia) return;
+    if(l.tipo_lancamento==='folheacao') return; // tratado abaixo, junto com FOL
+    const t=l.tipo_lancamento||'flash';
+    if(!acc[t]) acc[t]={tipo:t, metal:l.metal, peso_kg:0, consumo_g:0, lotes:0};
+    acc[t].peso_kg += parseFloat(l.peso_g||0);
+    acc[t].consumo_g += parseFloat(l.consumo_calc||0);
+    acc[t].lotes += 1;
+  });
+  let folPeso=0, folCons=0, folLotes=0;
+  FOL.forEach(f=>{
+    if(f.tipo==='consumo' && (f.data||'').substring(0,10)===dia) { folCons+=parseFloat(f.quantidade_g||0); folLotes+=1; }
+  });
+  LAN.forEach(l=>{
+    if(l.tipo_lancamento==='folheacao' && (l.datetime_lancamento||'').substring(0,10)===dia) { folPeso+=parseFloat(l.peso_g||0); folCons+=parseFloat(l.consumo_calc||0); folLotes+=1; }
+  });
+  if(folLotes>0) acc['folheacao']={tipo:'folheacao', metal:'Ouro', peso_kg:folPeso, consumo_g:folCons, lotes:folLotes};
+  return Object.values(acc).sort((a,b)=>b.consumo_g-a.consumo_g);
+}
+
+function mudaDiaCD(delta) {
+  const el=document.getElementById('cd-data');
+  const d=new Date((el.value||hoje())+'T00:00:00');
+  d.setDate(d.getDate()+delta);
+  el.value=d.toISOString().split('T')[0];
+  renderConsumoDiario();
+}
+function cdHoje() { document.getElementById('cd-data').value=hoje(); renderConsumoDiario(); }
+
+function renderConsumoDiario() {
+  const el=document.getElementById('cd-out'); if(!el) return;
+  const diaEl=document.getElementById('cd-data');
+  if(!diaEl.value) diaEl.value=hoje();
+  const dia=diaEl.value;
+
+  const porBanho = calcConsumoDia(dia);
+  const totO = porBanho.filter(r=>r.metal==='Ouro').reduce((s,r)=>s+r.consumo_g,0);
+  const totP = porBanho.filter(r=>r.metal==='Prata').reduce((s,r)=>s+r.consumo_g,0);
+  const totD = porBanho.filter(r=>r.metal==='Diamante').reduce((s,r)=>s+r.consumo_g,0);
+
+  if(!porBanho.length) {
+    el.innerHTML=`<div class="card"><div class="nd">Nenhum lançamento em ${fmtDate(dia)}.</div></div>`;
+  } else {
+    el.innerHTML=`
+      <div class="grid">
+        <div class="stat s-g"><div class="slbl">Ouro a repor</div><div class="sval vg">${totO.toFixed(4)} g</div><div class="ssub">${fmtDate(dia)}</div></div>
+        <div class="stat s-s"><div class="slbl">Prata a repor</div><div class="sval vs">${totP.toFixed(4)} g</div><div class="ssub">${fmtDate(dia)}</div></div>
+        ${totD>0?`<div class="stat s-b"><div class="slbl">Diamante</div><div class="sval" style="color:var(--blue)">${totD.toFixed(4)} g</div><div class="ssub">${fmtDate(dia)}</div></div>`:''}
+      </div>
+      <div class="card">
+        <div class="ct">🧪 Reposição por Banho — ${fmtDate(dia)}</div>
+        <div class="tw"><table><thead><tr><th>Banho</th><th class="tr">Peso Processado</th><th class="tr">Lotes</th><th class="tr">Repor no Tanque</th></tr></thead><tbody>
+        ${porBanho.map(r=>{
+          const tp=TIPOS[r.tipo]||{label:r.tipo,badge:'bg-gold'};
+          const cls = r.metal==='Prata'?'ts':(r.metal==='Diamante'?'':'tg');
+          const style = r.metal==='Diamante'?' style="color:var(--blue)"':'';
+          return `<tr>
+            <td><span class="badge ${tp.badge}">${tp.label}</span></td>
+            <td class="tr">${fmtPeso(r.peso_kg)}</td>
+            <td class="tr">${r.lotes}</td>
+            <td class="tr"><strong class="${cls}"${style}>${r.consumo_g.toFixed(4)} g</strong></td>
+          </tr>`;
+        }).join('')}
+        <tr style="border-top:2px solid var(--border2);font-weight:700;background:#fafbfc">
+          <td colspan="3">TOTAL DO DIA</td>
+          <td class="tr">Ouro <strong class="tg">${totO.toFixed(4)} g</strong> · Prata <strong class="ts">${totP.toFixed(4)} g</strong></td>
+        </tr>
+        </tbody></table></div>
+        <p style="font-size:11px;color:var(--text3);margin-top:10px">💡 Repasse esses valores ao operador: é exatamente o quanto precisa repor em cada banho hoje.</p>
+      </div>`;
+  }
+  renderCDHist(dia);
+}
+
+function renderCDHist(diaAtual) {
+  const el=document.getElementById('cd-hist-out'); if(!el) return;
+  const dias = {};
+  LAN.forEach(l=>{
+    const d=(l.datetime_lancamento||'').substring(0,10); if(!d) return;
+    if(!dias[d]) dias[d]={dia:d,o:0,p:0};
+    const c=parseFloat(l.consumo_calc||0);
+    if(l.metal==='Ouro') dias[d].o += c;
+    else if(l.metal==='Prata') dias[d].p += c;
+  });
+  FOL.forEach(f=>{
+    if(f.tipo!=='consumo') return;
+    const d=(f.data||'').substring(0,10); if(!d) return;
+    if(!dias[d]) dias[d]={dia:d,o:0,p:0};
+    dias[d].o += parseFloat(f.quantidade_g||0);
+  });
+  const lista = Object.values(dias).sort((a,b)=>b.dia.localeCompare(a.dia)).slice(0,14);
+  if(!lista.length) { el.innerHTML='<div class="nd">Sem histórico.</div>'; return; }
+  el.innerHTML=`<div class="tw"><table><thead><tr><th>Dia</th><th class="tr">Ouro (g)</th><th class="tr">Prata (g)</th></tr></thead><tbody>
+    ${lista.map(d=>`<tr style="cursor:pointer" onclick="document.getElementById('cd-data').value='${d.dia}';renderConsumoDiario()">
+      <td>${fmtDate(d.dia)}${d.dia===diaAtual?' <span class="badge bg-gold">selecionado</span>':''}</td>
+      <td class="tr tg">${d.o>0?d.o.toFixed(4)+' g':'—'}</td>
+      <td class="tr ts">${d.p>0?d.p.toFixed(4)+' g':'—'}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function expCSVConsumo() {
+  const dia=document.getElementById('cd-data').value||hoje();
+  const porBanho = calcConsumoDia(dia);
+  const h=['Banho','Metal','Peso Processado (kg)','Lotes','Consumo/Repor (g)'];
+  const rows = porBanho.map(r=>[TIPOS[r.tipo]?.label||r.tipo, r.metal, r.peso_kg.toFixed(3), r.lotes, r.consumo_g.toFixed(4)]);
+  dlFile(`consumo_diario_${dia}.csv`,[h,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'text/csv');
+  toast('CSV exportado!');
 }
 
 /* ============================================================
