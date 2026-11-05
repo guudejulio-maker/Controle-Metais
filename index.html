@@ -638,6 +638,7 @@ td{padding:8px 12px;vertical-align:middle}
           <option value="ajuste_negativo">Saída / Ajuste −</option>
           <option value="perda">Perda</option>
           <option value="sobra_reaproveitada">Sobra Reaproveitada +</option>
+          <option value="recuperacao">Recuperação + (metal recuperado da caixa/banho)</option>
         </select>
       </div>
       <div class="fi"><label>Quantidade (g) *</label><input type="number" id="a-qtd" step="0.001" placeholder="0.000"></div>
@@ -1569,7 +1570,7 @@ async function salvarAj() {
 function _chainEst(metal) {
   const meses = mesesAsc();
   let open = 0, first = true, base = 0;
-  const rows = []; let tTc=0,tAp=0,tAn=0,tCons=0,tRef=0;
+  const rows = []; let tTc=0,tAp=0,tAn=0,tCons=0,tRef=0,tRec=0;
   for(const mk of meses) {
     const anc = metal==='Ouro' ? CFG.ouro_inicial?.[mk] : CFG.prata_inicial?.[mk];
     const temAnc = anc!==undefined && anc!==null && anc!=='';
@@ -1579,7 +1580,8 @@ function _chainEst(metal) {
     const tc = COMP.filter(c=>getRowMes(c,'data')===mk && c.metal===metal)
                    .reduce((s,c)=>s+parseFloat(c.qtd_g||0),0);
     const aj = AJ.filter(a=>getRowMes(a,'data')===mk && a.metal===metal);
-    const ap = aj.filter(a=>['ajuste_positivo','sobra_reaproveitada'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
+    const ap = aj.filter(a=>['ajuste_positivo','sobra_reaproveitada','recuperacao'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
+    const rec = aj.filter(a=>a.tipo==='recuperacao').reduce((s,a)=>s+parseFloat(a.qtd_g||0),0); // já incluída em ap (só p/ exibição)
     const an = aj.filter(a=>['ajuste_negativo','perda'].includes(a.tipo)).reduce((s,a)=>s+parseFloat(a.qtd_g||0),0);
     const cons = LAN.filter(l=>getRowMes(l,'datetime_lancamento')===mk && l.metal===metal && !['folheacao','folheacao_consumo','diamante'].includes(l.tipo_lancamento))
                     .reduce((s,l)=>s+parseFloat(l.consumo_calc||0),0);
@@ -1587,11 +1589,11 @@ function _chainEst(metal) {
       ? FOL.filter(f=>getRowMes(f,'data')===mk && f.tipo==='reforco').reduce((s,f)=>s+parseFloat(f.quantidade_g||0),0)
       : 0;
     const close = open + tc + ap - an - cons - reforcosFol;
-    rows.push({mes:mk, ini:open, tc, ap, an, cons, reforcosFol, est:close});
-    tTc+=tc; tAp+=ap; tAn+=an; tCons+=cons; tRef+=reforcosFol;
+    rows.push({mes:mk, ini:open, tc, ap, rec, an, cons, reforcosFol, est:close});
+    tTc+=tc; tAp+=ap; tAn+=an; tCons+=cons; tRef+=reforcosFol; tRec+=rec;
     open = close; first = false;
   }
-  return { rows, base, totals:{ini:base, tc:tTc, ap:tAp, an:tAn, cons:tCons, reforcosFol:tRef, est: rows.length?rows[rows.length-1].est:0} };
+  return { rows, base, totals:{ini:base, tc:tTc, ap:tAp, rec:tRec, an:tAn, cons:tCons, reforcosFol:tRef, est: rows.length?rows[rows.length-1].est:0} };
 }
 
 function calcEst(metal, mesKey) {
@@ -1602,7 +1604,7 @@ function calcEst(metal, mesKey) {
   // mês sem movimentos: abertura = fechamento do mês anterior mais próximo
   const ant = ch.rows.filter(r=>r.mes < mesKey);
   const prev = ant.length ? ant[ant.length-1].est : ch.base;
-  return { ini:prev, tc:0, ap:0, an:0, cons:0, reforcosFol:0, est:prev };
+  return { ini:prev, tc:0, ap:0, rec:0, an:0, cons:0, reforcosFol:0, est:prev };
 }
 
 function calcEstHistorico(metal) {
@@ -1626,8 +1628,9 @@ function renderEst() {
     <table style="width:100%;font-size:13px;margin-top:12px">
       <tr><td style="color:var(--text3)">${labelIni}</td><td class="tr"><strong>${e.ini.toFixed(4)} g</strong></td></tr>
       <tr><td style="color:var(--text3)">+ Compras</td><td class="tr tgr">+${e.tc.toFixed(4)} g</td></tr>
-      <tr><td style="color:var(--text3)">+ Ajustes / Sobras</td><td class="tr tgr">+${e.ap.toFixed(4)} g</td></tr>
+      <tr><td style="color:var(--text3)">+ Ajustes / Sobras / Recuperação</td><td class="tr tgr">+${e.ap.toFixed(4)} g</td></tr>
       <tr><td style="color:var(--text3)">− Consumo operacional</td><td class="tr tr2">−${e.cons.toFixed(4)} g</td></tr>
+      ${e.rec>0?`<tr><td style="color:var(--text3);font-size:11px;padding-left:12px">↳ Recuperação no período: ${e.rec.toFixed(4)} g · Consumo líquido: ${(e.cons-e.rec).toFixed(4)} g</td><td></td></tr>`:''}
       ${rowReforco}
       <tr><td style="color:var(--text3)">− Perdas / Ajustes neg.</td><td class="tr tr2">−${e.an.toFixed(4)} g</td></tr>
       <tr style="border-top:2px solid var(--border);font-weight:700"><td>= ${labelEst}</td><td class="tr ${cc}">${e.est.toFixed(4)} g</td></tr>
@@ -1643,8 +1646,8 @@ function renderMov() {
 
   COMP.filter(c=>match(c,'data')).forEach(c=>movs.push({data:c.data,metal:c.metal,tipo:'Compra',ent:parseFloat(c.qtd_g||0),sai:0,obs:c.fornecedor||c.obs}));
   AJ.filter(a=>match(a,'data')).forEach(a=>{
-    const ie=['ajuste_positivo','sobra_reaproveitada'].includes(a.tipo);
-    const lb={ajuste_positivo:'Ajuste +',ajuste_negativo:'Ajuste −',perda:'Perda',sobra_reaproveitada:'Sobra +'}[a.tipo]||a.tipo;
+    const ie=['ajuste_positivo','sobra_reaproveitada','recuperacao'].includes(a.tipo);
+    const lb={ajuste_positivo:'Ajuste +',ajuste_negativo:'Ajuste −',perda:'Perda',sobra_reaproveitada:'Sobra +',recuperacao:'Recuperação +'}[a.tipo]||a.tipo;
     movs.push({data:a.data,metal:a.metal,tipo:lb,ent:ie?parseFloat(a.qtd_g||0):0,sai:ie?0:parseFloat(a.qtd_g||0),obs:a.obs});
   });
   LAN.filter(l=>match(l,'datetime_lancamento')).forEach(l=>{
