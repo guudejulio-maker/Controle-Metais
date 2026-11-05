@@ -1419,7 +1419,8 @@ function renderLan() {
       else tFolCon+=c;
     } else if(['folheacao'].includes(l.tipo_lancamento)) {
       tFolCon+=c; // legado conta como consumo de folheação
-    } else if(l.metal==='Ouro') tO+=c; else tP+=c;
+    } else if(l.tipo_lancamento==='diamante') { /* diamante em litros: não soma em ouro/prata */ }
+    else if(l.metal==='Ouro') tO+=c; else tP+=c;
 
     const dt=l.datetime_lancamento?.split('T')[0]||'—';
     let det='';
@@ -1443,7 +1444,7 @@ function renderLan() {
     return `<tr style="${l.fechado?'opacity:.5':''}">
       <td style="white-space:nowrap">${fmtDate(dt)}${l.fechado?' <span class="badge bg-red" style="font-size:9px">FEC</span>':''}</td>
       <td><span class="badge ${ti.badge}">${ti.label}</span></td>
-      <td><span class="badge ${l.metal==='Ouro'?'bg-gold':'bg-silver'}">${l.metal}</span></td>
+      <td><span class="badge ${l.metal==='Ouro'?'bg-gold':l.metal==='Diamante'?'bg-blue':'bg-silver'}">${l.metal}</span></td>
       <td style="font-size:12px">${det}${camStr}</td>
       <td class="tr">${pesoStr}</td>
       <td class="tr" style="font-weight:700;color:${consColor}">${c.toFixed(4)}</td>
@@ -1835,7 +1836,7 @@ async function gerarRel() {
     // Lançamentos operacionais (NÃO inclui folheação legado nem consumo folheação)
     const lanPeriodo = LAN.filter(l=>{
       const d=(l.datetime_lancamento||'').substring(0,10);
-      return (!ini || d>=ini) && (!fim || d<=fim) && (!fm || l.metal===fm) && !['folheacao','folheacao_consumo'].includes(l.tipo_lancamento);
+      return (!ini || d>=ini) && (!fim || d<=fim) && (!fm || l.metal===fm) && !['folheacao','folheacao_consumo','diamante'].includes(l.tipo_lancamento); // diamante tratado à parte (lanDiamPer)
     });
     const comprasPeriodo = COMP.filter(c=>{
       const d=(c.data||'').substring(0,10);
@@ -2189,7 +2190,7 @@ function renderConsumoDiario() {
       <div class="grid">
         <div class="stat s-g"><div class="slbl">Ouro a repor</div><div class="sval vg">${totO.toFixed(4)} g</div><div class="ssub">${fmtDate(dia)}</div></div>
         <div class="stat s-s"><div class="slbl">Prata a repor</div><div class="sval vs">${totP.toFixed(4)} g</div><div class="ssub">${fmtDate(dia)}</div></div>
-        ${totD>0?`<div class="stat s-b"><div class="slbl">Diamante</div><div class="sval" style="color:var(--blue)">${totD.toFixed(4)} g</div><div class="ssub">${fmtDate(dia)}</div></div>`:''}
+        ${totD>0?`<div class="stat s-b"><div class="slbl">Diamante</div><div class="sval" style="color:var(--blue)">${totD.toFixed(4)} L</div><div class="ssub">${fmtDate(dia)}</div></div>`:''}
       </div>
       <div class="card">
         <div class="ct">🧪 Reposição por Banho — ${fmtDate(dia)} <small style="font-weight:400;text-transform:none;letter-spacing:0">detalhado por cor/tanque/camada</small></div>
@@ -2205,11 +2206,11 @@ function renderConsumoDiario() {
             <td class="tr" style="color:var(--text3)">${it.camada}</td>
             <td class="tr">${fmtPeso(it.peso_kg)}</td>
             <td class="tr">${it.lotes}</td>
-            <td class="tr"><strong class="${cls}"${style}>${it.consumo_g.toFixed(4)} g</strong></td>
+            <td class="tr"><strong class="${cls}"${style}>${it.consumo_g.toFixed(4)} ${r.metal==='Diamante'?'L':'g'}</strong></td>
           </tr>`).join('');
           const subtotal = r.itens.length>1 ? `<tr style="background:var(--surface2);font-weight:700">
             <td colspan="6">Subtotal ${tp.label}</td>
-            <td class="tr"><strong class="${cls}"${style}>${r.consumo_g.toFixed(4)} g</strong></td>
+            <td class="tr"><strong class="${cls}"${style}>${r.consumo_g.toFixed(4)} ${r.metal==='Diamante'?'L':'g'}</strong></td>
           </tr>` : '';
           return linhasItens + subtotal;
         }).join('')}
